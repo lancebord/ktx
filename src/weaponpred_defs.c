@@ -144,12 +144,13 @@ void WPredict_SendDefinitionsTo(gedict_t *player)
 
 void WPredict_Initialize(void)
 {
-	weppreddef_t *sg, *ssg, *ng, *sng, *gl, *rl, *lg;
+	weppreddef_t *axe, *sg, *ssg, *ng, *sng, *gl, *rl, *lg;
 	weppredanim_t *player_shot0, *player_shot1, *player_shot2;
 	weppredanim_t *player_shot3, *player_shot4, *player_shot5, *player_shot6;
 
 	memset(wpredict_definitions, 0, sizeof(wpredict_definitions));
 
+	axe = &wpredict_definitions[1];
 	sg = &wpredict_definitions[2];
 	ssg = &wpredict_definitions[3];
 	ng = &wpredict_definitions[4];
@@ -158,7 +159,52 @@ void WPredict_Initialize(void)
 	rl = &wpredict_definitions[7];
 	lg = &wpredict_definitions[8];
 
-	/* Index 1 is intentionally left without an axe weapondef until axe prediction is client-only. */
+	// AXE
+	player_shot0 = &axe->anim_states[0];
+	player_shot1 = &axe->anim_states[1];
+	player_shot2 = &axe->anim_states[2];
+	player_shot3 = &axe->anim_states[3];
+	player_shot4 = &axe->anim_states[4];
+	player_shot5 = &axe->anim_states[5];
+	player_shot6 = &axe->anim_states[6];
+	axe->modelindex = trap_precache_model("progs/v_axe.mdl");
+	axe->attack_time = 500;
+	axe->impulse = 1;
+	axe->itemflag = IT_AXE;
+	axe->anim_number = 9;
+	player_shot0->flags = WEPPREDANIM_DEFAULT | WEPPREDANIM_ATTACK;
+	player_shot0->mdlframe = 0;
+	player_shot0->nextanim = 1;
+	player_shot1->flags = WEPPREDANIM_SOUND;
+	player_shot1->sound = trap_precache_sound("weapons/ax1.wav");
+	player_shot1->soundmask = 0x02;
+	player_shot1->mdlframe = 1;
+	player_shot1->nextanim = 2;
+	player_shot1->length = 100;
+	player_shot2->mdlframe = 2;
+	player_shot2->nextanim = 3;
+	player_shot2->length = 100;
+	player_shot3->mdlframe = 3;
+	player_shot3->nextanim = 4;
+	player_shot3->length = 100;
+	player_shot4->mdlframe = 4;
+	player_shot4->nextanim = 0;
+	player_shot4->length = 100;
+	player_shot5->flags = WEPPREDANIM_SOUND;
+	player_shot5->sound = trap_precache_sound("weapons/ax1.wav");
+	player_shot5->soundmask = 0x02;
+	player_shot5->mdlframe = 5;
+	player_shot5->nextanim = 6;
+	player_shot5->length = 100;
+	player_shot6->mdlframe = 6;
+	player_shot6->nextanim = 7;
+	player_shot6->length = 100;
+	axe->anim_states[7].mdlframe = 7;
+	axe->anim_states[7].nextanim = 8;
+	axe->anim_states[7].length = 100;
+	axe->anim_states[8].mdlframe = 8;
+	axe->anim_states[8].nextanim = 0;
+	axe->anim_states[8].length = 100;
 
 	// SHOTGUN
 	player_shot0 = &sg->anim_states[0];
