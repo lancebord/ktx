@@ -19,6 +19,8 @@
 #define WEPPREDANIM_PROJECTILE	0x0002
 #define WEPPREDANIM_BRANCH		0x0040
 #define WEPPREDANIM_MOREBYTES	0x0080
+#define WEPPREDANIM_SOUND2		(0x0400 | WEPPREDANIM_MOREBYTES)
+#define WEPPREDANIM_HAS(flags, flag) (((flags) & (flag)) == (flag))
 
 string 	autocvar_r_rockettrail;
 string 	autocvar_r_grenadetrail;
@@ -223,6 +225,11 @@ void EntUpdate_WeaponDef(float is_new)
 			if (anim_flags & WEPPREDANIM_MOREBYTES)
 				anim_flags |= ReadByte() << 8;
 			if (anim_flags & WEPPREDANIM_SOUND)
+			{
+				ReadShort();
+				ReadShort();
+			}
+			if (WEPPREDANIM_HAS(anim_flags, WEPPREDANIM_SOUND2))
 			{
 				ReadShort();
 				ReadShort();

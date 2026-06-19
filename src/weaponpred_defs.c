@@ -79,6 +79,11 @@ static qbool WeaponDefinition_WriteTo(int to, int weapon_index, int sendflags)
 				WriteShort(to, anim->sound);
 				WriteShort(to, anim->soundmask);
 			}
+			if (WEPPREDANIM_HAS(anim->flags, WEPPREDANIM_SOUND2))
+			{
+				WriteShort(to, anim->sound2);
+				WriteShort(to, anim->soundmask2);
+			}
 			if (anim->flags & WEPPREDANIM_PROJECTILE)
 			{
 				WriteShort(to, anim->projectile_model);
@@ -430,15 +435,18 @@ void WPredict_Initialize(void)
 	player_shot1 = &lg->anim_states[1];
 	player_shot2 = &lg->anim_states[2];
 	lg->modelindex = trap_precache_model("progs/v_light.mdl");
-	lg->attack_time = 200;
+	lg->attack_time = 100;
 	lg->impulse = 8;
 	lg->itemflag = IT_LIGHTNING;
 	lg->anim_number = 3;
-	player_shot0->flags = WEPPREDANIM_ATTACK | WEPPREDANIM_SOUND | WEPPREDANIM_SOUNDAUTO;
+	player_shot0->flags = WEPPREDANIM_ATTACK | WEPPREDANIM_SOUND | WEPPREDANIM_SOUND2 | WEPPREDANIM_SOUNDAUTO | WEPPREDANIM_LGBEAM;
 	player_shot0->mdlframe = 0;
 	player_shot0->nextanim = 1;
+	player_shot0->length = 100;
 	player_shot0->sound = trap_precache_sound("weapons/lstart.wav");
 	player_shot0->soundmask = 0x0100;
+	player_shot0->sound2 = trap_precache_sound("weapons/lhit.wav");
+	player_shot0->soundmask2 = 0x0100;
 	player_shot1->flags = WEPPREDANIM_MUZZLEFLASH | WEPPREDANIM_SOUND | WEPPREDANIM_LGBEAM | WEPPREDANIM_LTIME | WEPPREDANIM_ATTACK | WEPPREDANIM_BRANCH;
 	player_shot1->mdlframe = -4;
 	player_shot1->length = 100;

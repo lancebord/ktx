@@ -792,6 +792,8 @@ typedef struct fb_entvars_s {
 #define WEPPREDANIM_MOREBYTES	0x0080
 #define WEPPREDANIM_SOUNDAUTO	(0x0100 | WEPPREDANIM_MOREBYTES)
 #define WEPPREDANIM_LTIME		(0x0200 | WEPPREDANIM_MOREBYTES)
+#define WEPPREDANIM_SOUND2		(0x0400 | WEPPREDANIM_MOREBYTES)
+#define WEPPREDANIM_HAS(flags, flag) (((flags) & (flag)) == (flag))
 
 #define WEAPONDEF_INIT			(1 << 0)
 #define WEAPONDEF_FLAGS			(1 << 1)
@@ -819,6 +821,8 @@ typedef struct weppredanim_s
 	int				flags;
 	int				sound;
 	int				soundmask;
+	int				sound2;
+	int				soundmask2;
 	int				projectile_model;
 	short			projectile_velocity[3];
 	signed char		projectile_offset[3];
