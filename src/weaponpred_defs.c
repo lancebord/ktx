@@ -134,14 +134,14 @@ void WPredict_SendDefinitionsTo(gedict_t *player)
 
 	old_msg_entity = g_globalvars.msg_entity;
 	g_globalvars.msg_entity = EDICT_TO_PROG(player);
-	WriteByte(MSG_ONE, SVC_EZCSQC_SETUP);
-	WriteByte(MSG_ONE, 1);
-	WriteByte(MSG_ONE, count);
+	WriteByte(MSG_ONE_NORECORD, SVC_EZCSQC_SETUP);
+	WriteByte(MSG_ONE_NORECORD, 1);
+	WriteByte(MSG_ONE_NORECORD, count);
 	for (i = 0; i < (int)(sizeof(wpredict_definitions) / sizeof(wpredict_definitions[0])); i++)
 	{
 		if (WeaponDefinition_Exists(i))
 		{
-			WeaponDefinition_WriteTo(MSG_ONE, i, SENDFLAGS_ALL);
+			WeaponDefinition_WriteTo(MSG_ONE_NORECORD, i, SENDFLAGS_ALL);
 		}
 	}
 	g_globalvars.msg_entity = old_msg_entity;
