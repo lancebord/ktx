@@ -50,6 +50,7 @@ void ExitCaptain(void);
 void CheckFinishCaptain(void);
 void MakeMOTD(void);
 void ImpulseCommands(void);
+void WeaponPrediction_ResetBaseline(void);
 void StartDie(void);
 void ZeroFpsStats(void);
 void item_megahealth_rot(void);
@@ -930,6 +931,7 @@ void k_respawn(gedict_t *p, qbool body)
 	SetRespawnParms();
 	// respawn
 	PutClientInServer();
+	WeaponPrediction_ResetBaseline();
 
 	self = swap;
 }
@@ -1733,6 +1735,30 @@ void WeaponPrediction_MarkSendFlags(void)
 
 
 	trap_SetSendNeeded(NUM_FOR_EDICT(wep), sendflags, NUM_FOR_EDICT(self));
+}
+
+void WeaponPrediction_ResetBaseline(void)
+{
+	gedict_t *wep = self->weapon_pred;
+
+	if (!wep || !iKey(self, "ezcsqc_ready"))
+	{
+		return;
+	}
+
+	// A full baseline starts a new client prediction generation after respawn.
+	wep->s.v.impulse = self->s.v.impulse;
+	wep->s.v.weapon = self->weapon_index;
+	wep->s.v.ammo_shells = self->s.v.ammo_shells;
+	wep->s.v.ammo_nails = self->s.v.ammo_nails;
+	wep->s.v.ammo_rockets = self->s.v.ammo_rockets;
+	wep->s.v.ammo_cells = self->s.v.ammo_cells;
+	wep->attack_finished = self->attack_finished;
+	wep->client_think = self->client_think;
+	wep->client_nextthink = self->client_nextthink;
+	wep->client_predflags = self->client_predflags;
+	wep->client_ping = self->client_ping;
+	SetSendNeeded(wep, SENDFLAGS_ALL, NUM_FOR_EDICT(self));
 }
 
 
