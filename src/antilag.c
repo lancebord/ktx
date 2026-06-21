@@ -738,6 +738,7 @@ void antilag_lagmove_all_proj(gedict_t *owner, gedict_t *e)
 void antilag_lagmove_all_proj_bounce(gedict_t *owner, gedict_t *e)
 {
 	float ms = (atof(ezinfokey(owner, "ping")) / 1000);
+	const float newmis_time = 0.05;
 	float step_time, current_time;
 	antilag_t *list;
 	vec3_t old_org;
@@ -746,22 +747,11 @@ void antilag_lagmove_all_proj_bounce(gedict_t *owner, gedict_t *e)
 	if (cvar("sv_antilag") != 1)
 		return;
 
-	/*
-	 * Keep bounce projectiles on the same timing model as other projectiles:
-	 * full input-to-server time, capped by ANTILAG_REWIND_MAXPROJECTILE. The
-	 * ANTILAG_MAX_PREDICTION subtraction belongs to player hitbox estimation,
-	 * not to projectile flight phase.
-	 */
-	// ms -= (ms < ANTILAG_MAX_PREDICTION ? (1 / 77.0) : ANTILAG_MAX_PREDICTION);
-	
-	/* A one-frame ping has no meaningful catch-up beyond the native newmis step. */
+	/* Native newmis advances the origin separately from the latency catch-up horizon. */
 	if (ms <= (1 / 77.0))
 		ms = 0;
-
-	if (ms > ANTILAG_REWIND_MAXPROJECTILE)
-		ms = ANTILAG_REWIND_MAXPROJECTILE;
-	else if (ms < 0)
-		ms = 0;
+	else
+		ms = min(ms, ANTILAG_REWIND_MAXPROJECTILE);
 
 	e->client_time = ms;
 
@@ -805,6 +795,12 @@ void antilag_lagmove_all_proj_bounce(gedict_t *owner, gedict_t *e)
 	}
 
 	current_time = g_globalvars.time - ms;
+	// Reproduce MVDSV's native newmis phase before applying any extra catch-up.
+	if (newmis == e)
+	{
+		antilag_lagmove_all_playeronly(owner, ms);
+		Physics_Bounce(newmis_time);
+	}
 
 	// actual step through
 	while (current_time < g_globalvars.time)
