@@ -4826,8 +4826,11 @@ void PlayerPostThink(void)
 			self->client_predflags = (int)self->client_predflags | PRDFL_MIDAIR;
 	}
 
+	// disable weapon prediction when tracking another player
+	if (self->trackent)
+		self->client_predflags = PRDFL_FORCEOFF;
 	// can't predict hook reliably, so just force prediction off for now
-	if (self->s.v.weapon == IT_HOOK)
+	else if (self->s.v.weapon == IT_HOOK)
 		self->client_predflags = PRDFL_FORCEOFF;
 	else if (!readytostart())
 		self->client_predflags = PRDFL_FORCEOFF;
