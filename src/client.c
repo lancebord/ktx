@@ -920,6 +920,7 @@ void k_respawn(gedict_t *p, qbool body)
 	self->s.v.button0 = 0;
 	self->s.v.button1 = 0;
 	self->s.v.button2 = 0;
+	self->s.v.impulse = 0;
 
 	// make a copy of the dead body for appearances sake
 	if (body)
