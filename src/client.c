@@ -1674,11 +1674,24 @@ qbool WeaponPrediction_SendEntity(int sendflags)
 	return true;
 }
 
+void WeaponPrediction_CreateEnt(void);
 
 void WeaponPrediction_MarkSendFlags(void)
 {
 	gedict_t *wep = self->weapon_pred;
 	int sendflags = WEAPONINFO_TIMING;
+
+	// Map/mode reloads can leave the player without a valid weapon-info sidecar.
+	if (!wep || wep->s.v.owner != EDICT_TO_PROG(self) || wep->SendEntity != (func_t)WeaponPrediction_SendEntity)
+	{
+		self->weapon_pred = NULL;
+		WeaponPrediction_CreateEnt();
+		wep = self->weapon_pred;
+		if (!wep)
+		{
+			return;
+		}
+	}
 
 	if (!wep->cnt2 && iKey(self, "ezcsqc"))
 	{
