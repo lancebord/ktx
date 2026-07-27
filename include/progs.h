@@ -1144,6 +1144,7 @@ typedef struct gedict_s
 	int i_agmr; 							// Instagib AirGib Master rune
 
 	qbool was_jump;
+	qbool double_jumped;					// used up the mid-air jump since last touching ground
 
 // { wreg
 	qbool wreg_attack;						// client simulate +attack via "cmd wreg" feature

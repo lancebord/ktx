@@ -2084,6 +2084,7 @@ void PutClientInServer(void)
 // the spawn falling damage bug workaround
 	self->jump_flag = 0;
 	self->swim_flag = 0;
+	self->double_jumped = false;
 
 // brokenankle
 	self->brokenankle = 0;
@@ -2961,6 +2962,19 @@ void PlayerJump(void)
 
 	if (!(((int)(self->s.v.flags)) & FL_ONGROUND))
 	{
+		// CPMA/Reflex-style double jump: one extra mid-air jump, usable once per airtime
+		if (cvar("k_doublejump") && !self->double_jumped && !self->brokenankle
+				&& (((int)(self->s.v.flags)) & FL_JUMPRELEASED))
+		{
+			self->s.v.flags = ((int)self->s.v.flags) & ~FL_JUMPRELEASED;
+			self->double_jumped = true;
+			self->was_jump = true;
+
+			self->s.v.velocity[2] = cvar("k_doublejump_velocity") ? cvar("k_doublejump_velocity") : JUMPSPEED;
+
+			sound(self, CHAN_BODY, "player/plyrjmp8.wav", 1, ATTN_NORM);
+		}
+
 		return;
 	}
 
@@ -4765,6 +4779,7 @@ void CheckLand(void)
 	if ((int)self->s.v.flags & FL_ONGROUND)
 	{
 		self->brokenankle = 0;
+		self->double_jumped = false;
 	}
 
 // check to see if player landed and play landing sound

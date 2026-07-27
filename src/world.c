@@ -974,6 +974,9 @@ void FirstFrame(void)
 	RegisterCvar("k_midair");
 	RegisterCvarEx("k_midair_minheight", "1");
 
+	RegisterCvarEx("k_doublejump", "0"); // CPMA/Reflex-style single mid-air jump, once per airtime
+	RegisterCvarEx("k_doublejump_velocity", "270"); // JUMPSPEED by default
+
 	RegisterCvarEx("k_killquad", "0");
 
 	RegisterCvarEx("k_bloodfest", "0");
