@@ -1727,6 +1727,11 @@ void PrintCountdown(int seconds)
 			strlcat(text, va("%s %5s\n", "Airstep", redtext("on")), sizeof(text));
 		}
 
+		if (cvar("k_doublejump"))
+		{
+			strlcat(text, va("%s %2s\n", "DoubleJump", redtext("on")), sizeof(text));
+		}
+
 		vw_enabled = vw_available && cvar("k_allow_vwep") && cvar("k_vwep");
 		if (vw_enabled && !isRACE())
 		{
