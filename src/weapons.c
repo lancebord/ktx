@@ -1924,34 +1924,9 @@ void W_FireSuperSpikes(void)
 		}
 	}
 
-	aim(dir);		//dir = aim (self, 1000);
-
-	VectorCopy(self->s.v.origin, tmp);
-	tmp[2] += 16;
-	launch_spike(tmp, dir);
-	newmis->touch = (func_t) superspike_touch;
-	if (wipe_spike)
-	{
-		// Wipeout end-round flair for survivor SNG shots.
-		setmodel(newmis, "progs/s_bubble.spr");
-	}
-	else
-	{
-		setmodel(newmis, "progs/s_spike.mdl");
-	}
-	setsize(newmis, 0, 0, 0, 0, 0, 0);
-	g_globalvars.msg_entity = EDICT_TO_PROG(self);
-	WriteByte( MSG_ONE, SVC_SMALLKICK);
-
-	antilag_lagmove_all_proj(self, newmis);
-	antilag_unmove_all();
-	ScheduleProjectileSendIfLive(newmis);
-
-	if (cvar("sv_antilag") == 1)
-	{
-		g_globalvars.newmis = EDICT_TO_PROG(world);
-		newmis = world;
-	}
+	//dir = aim (self, 100000);
+	aim(dir);
+	FireBullets(bullets, dir, 0.01, 0.01, 0, dtSNG);
 }
 
 void W_FireSpikes(void)
@@ -1978,25 +1953,9 @@ void W_FireSpikes(void)
 		}
 	}
 
-	aim(dir);		// dir = aim (self, 1000);
-	VectorScale(g_globalvars.v_right, ox, tmp);
-	VectorAdd(tmp, self->s.v.origin, tmp);
-	tmp[2] += 16;
-	launch_spike(tmp, dir);
-
-	g_globalvars.msg_entity = EDICT_TO_PROG(self);
-	WriteByte( MSG_ONE, SVC_SMALLKICK);
-
-	antilag_lagmove_all_proj(self, newmis);
-	antilag_unmove_all();
-	ScheduleProjectileSendIfLive(newmis);
-	
-
-	if (cvar("sv_antilag") == 1)
-	{
-		g_globalvars.newmis = EDICT_TO_PROG(world);
-		newmis = world;
-	}
+	//dir = aim (self, 100000);
+	aim(dir);
+	FireBullets(bullets, dir, 0.01, 0.01, 0, dtSNG);
 }
 
 /*
