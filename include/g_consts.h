@@ -174,12 +174,15 @@
 #define MSG_ONE							1			// reliable to one (msg_entity)
 #define MSG_ALL							2			// reliable to all
 #define MSG_INIT						3			// write to the init string
-#define MSG_ENTITY						5			// for csqc
+#define MSG_CSQC						5			// for csqc
+#define MSG_ENTITY						MSG_CSQC
+#define MSG_ONE_NORECORD				6			// reliable to one, excluded from MVD
 
-#define NENT_PROJECTILE					10
-#define NENT_WEAPONPRED					20
-
-
+#define EZCSQC_WEAPONINFO				1
+#define EZCSQC_PROJECTILE				2
+#define EZCSQC_PLAYER					3
+#define EZCSQC_WEAPONDEF				4
+#define EZCSQC_HUDELEMENT				32
 
 // message levels
 #define PRINT_LOW						0			// pickup messages
@@ -217,6 +220,7 @@
 #define	SVC_UPDATEENTERTIME				37
 #define SVC_MUZZLEFLASH					39
 #define SVC_UPDATEUSERINFO				40
+#define SVC_EZCSQC_SETUP				77
 
 #define TE_SPIKE						0
 #define TE_SUPERSPIKE					1
@@ -310,6 +314,10 @@
 // k_sudden_death types
 #define SD_NORMAL						(1)
 #define SD_TIEBREAK						(2)
+#define SD_GOLDEN_FRAG					(4)
+
+
+#define GOLDEN_FRAG_SNAPSHOT_INITIAL_VALUE (9999)
 
 //
 #define CALLALIAS_SIZE					(128)

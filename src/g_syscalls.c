@@ -105,13 +105,13 @@ void trap_remove(intptr_t edn)
 	syscall(G_REMOVE_ENT, edn);
 }
 
-void trap_precache_sound(char *name)
+intptr_t trap_precache_sound(char *name)
 {
-	syscall(G_PRECACHE_SOUND, (intptr_t) name);
+	return syscall(G_PRECACHE_SOUND, (intptr_t) name);
 }
-void trap_precache_model(char *name)
+intptr_t trap_precache_model(char *name)
 {
-	syscall(G_PRECACHE_MODEL, (intptr_t) name);
+	return syscall(G_PRECACHE_MODEL, (intptr_t) name);
 }
 intptr_t trap_precache_vwep_model(char *name)
 {
@@ -434,6 +434,16 @@ void trap_setpause(intptr_t pause)
 	syscall(G_SETPAUSE, pause);
 }
 
+intptr_t trap_SprayClear(intptr_t id)
+{
+	return syscall(G_SPRAYCLEAR, id);
+}
+
+intptr_t trap_SprayClearAll(void)
+{
+	return syscall(G_SPRAYCLEARALL);
+}
+
 intptr_t QVMstrftime(char *valbuff, intptr_t sizebuff, const char *fmt, intptr_t offset)
 {
 	return syscall(G_QVMstrftime, (intptr_t) valbuff, sizebuff, (intptr_t) fmt, offset);
@@ -533,4 +543,9 @@ int trap_pointerstat(int statidx, int stattype, void *offset)
 intptr_t trap_SetSendNeeded(intptr_t subject, intptr_t flags, intptr_t to)
 {
 	return syscall(G_SETSENDNEEDED, subject, flags, to);
+}
+
+intptr_t trap_SetLastRuntime(intptr_t edn)
+{
+	return syscall(G_SETLASTRUNTIME, edn);
 }

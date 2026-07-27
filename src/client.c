@@ -50,6 +50,8 @@ void ExitCaptain(void);
 void CheckFinishCaptain(void);
 void MakeMOTD(void);
 void ImpulseCommands(void);
+void WeaponPrediction_ResetBaseline(void);
+qbool W_CanSwitch(int wp, qbool warn);
 void StartDie(void);
 void ZeroFpsStats(void);
 void item_megahealth_rot(void);
@@ -61,6 +63,18 @@ void item_megahealth_rot(void);
 float WO_GetSpawnRadius(gedict_t *spawn_point);
 
 extern int g_matchstarttime;
+
+static float CurrentClientPing(void)
+{
+	char *ping = ezinfokey(self, "ping_current");
+
+	if (!strnull(ping))
+	{
+		return atof(ping);
+	}
+
+	return atof(ezinfokey(self, "ping"));
+}
 
 void CheckAll(void)
 {
@@ -398,7 +412,7 @@ void SetChangeParms(void)
 	g_globalvars.parm12 = self->k_coach;
 	g_globalvars.parm13 = self->k_stuff;
 	g_globalvars.parm14 = self->ps.handicap;
-	g_globalvars.parm15 = self->ready;
+	g_globalvars.parm15 = ((match_in_progress == 2) || cvar("k_matchless")) ? self->ready : 0;
 }
 
 //
@@ -768,12 +782,12 @@ void SP_trigger_changelevel(void)
 {
 	if (!self->map)
 	{
-		G_Error("chagnelevel trigger doesn't have map");
+		G_Printf("changelevel trigger doesn't have map\n");
+		soft_ent_remove(self);
 	}
-
 	// qqshka: yeah, treat k_remove_end_hurt as hint to remove some shit from this level,
 	//		   not only hurt trigger
-	if (streq("end", mapname) && cvar("k_remove_end_hurt")
+	else if (streq("end", mapname) && cvar("k_remove_end_hurt")
 			&& (cvar("k_remove_end_hurt") != 2))
 	{
 		soft_ent_remove(self);
@@ -911,14 +925,17 @@ void SP_info_player_deathmatch(void)
 void k_respawn(gedict_t *p, qbool body)
 {
 	gedict_t *swap = self;
+	int respawn_impulse;
 
 	self = p; // warning
+	respawn_impulse = (int)self->s.v.impulse;
 
 	self->s.v.deadflag = DEAD_RESPAWNABLE;
 	self->wreg_attack = 0;
 	self->s.v.button0 = 0;
 	self->s.v.button1 = 0;
 	self->s.v.button2 = 0;
+	self->s.v.impulse = 0;
 
 	// make a copy of the dead body for appearances sake
 	if (body)
@@ -930,6 +947,16 @@ void k_respawn(gedict_t *p, qbool body)
 	SetRespawnParms();
 	// respawn
 	PutClientInServer();
+	WeaponPrediction_ResetBaseline();
+
+	// Keep intentional weapon-select respawn commands, but drop stale/invalid backups.
+	if (((respawn_impulse >= 1) && (respawn_impulse <= 8)) || respawn_impulse == 22)
+	{
+		if (W_CanSwitch(respawn_impulse, false))
+		{
+			self->s.v.impulse = respawn_impulse;
+		}
+	}
 
 	self = swap;
 }
@@ -1082,7 +1109,7 @@ gedict_t* Sub_SelectSpawnPoint(char *spawnname)
 	for (spot = world; (spot = find(spot, FOFCLSN, spawnname));)
 	{
 		float spot_radius;
-		
+
 		totalspots++;
 		pcount = 0;
 
@@ -1606,92 +1633,132 @@ qbool CanConnect(void)
 
 
 
-qbool WeaponPrediction_SendEntity(gedict_t *to, int sendflags)
+qbool WeaponPrediction_SendEntity(int sendflags)
 {
-	self = PROG_TO_EDICT(self->s.v.owner);
+	gedict_t *wep = self;
+	gedict_t *owner = PROG_TO_EDICT(wep->s.v.owner);
 
-	if (self != to)
+	if (owner != other)
 		return false;
 
-	WriteByte(MSG_ENTITY, NENT_WEAPONPRED);
-	WriteByte(MSG_ENTITY, sendflags);
 
-	
-	if (sendflags & 1)
+	/*
+	 * The mirror fields are updated before SetSendNeeded(), so a late first
+	 * callback can otherwise look like a tiny delta. Force one complete
+	 * owner baseline the first time this CSQC entity is actually serialized.
+	 */
+	if (!wep->cnt)
 	{
-		WriteByte(MSG_ENTITY, self->s.v.impulse);
-		WriteShort(MSG_ENTITY, self->s.v.weapon);
-	}
-	if (sendflags & 2)
-		WriteByte(MSG_ENTITY, self->s.v.ammo_shells);
-	if (sendflags & 4)
-		WriteByte(MSG_ENTITY, self->s.v.ammo_nails);
-	if (sendflags & 8)
-		WriteByte(MSG_ENTITY, self->s.v.ammo_rockets);
-	if (sendflags & 16)
-		WriteByte(MSG_ENTITY, self->s.v.ammo_cells);
-
-	
-	if (sendflags & 32)
-	{
-		WriteFloat(MSG_ENTITY, self->attack_finished);
-		WriteFloat(MSG_ENTITY, self->client_nextthink);
-		WriteByte(MSG_ENTITY, self->client_thinkindex);
+		sendflags |= WEAPONINFO_INDEX | WEAPONINFO_AMMO_SHELLS | WEAPONINFO_AMMO_NAILS
+			| WEAPONINFO_AMMO_ROCKETS | WEAPONINFO_AMMO_CELLS | WEAPONINFO_ATTACK
+			| WEAPONINFO_TIMING | WEAPONINFO_PRED_PING;
+		wep->cnt = 1;
 	}
 
-	if (sendflags & 64)
+	sendflags &= WEAPONINFO_INDEX | WEAPONINFO_AMMO_SHELLS | WEAPONINFO_AMMO_NAILS
+		| WEAPONINFO_AMMO_ROCKETS | WEAPONINFO_AMMO_CELLS | WEAPONINFO_ATTACK
+		| WEAPONINFO_TIMING | WEAPONINFO_PRED_PING;
+
+	WriteByte(MSG_CSQC, EZCSQC_WEAPONINFO);
+	WriteByte(MSG_CSQC, sendflags);
+
+	if (sendflags & WEAPONINFO_INDEX)
 	{
-		WriteFloat(MSG_ENTITY, self->client_time);
-		WriteByte(MSG_ENTITY, self->s.v.weaponframe);
+		WriteByte(MSG_CSQC, owner->s.v.impulse);
+		WriteByte(MSG_CSQC, owner->weapon_index);
+	}
+	if (sendflags & WEAPONINFO_AMMO_SHELLS)
+		WriteByte(MSG_CSQC, owner->s.v.ammo_shells);
+	if (sendflags & WEAPONINFO_AMMO_NAILS)
+		WriteByte(MSG_CSQC, owner->s.v.ammo_nails);
+	if (sendflags & WEAPONINFO_AMMO_ROCKETS)
+		WriteByte(MSG_CSQC, owner->s.v.ammo_rockets);
+	if (sendflags & WEAPONINFO_AMMO_CELLS)
+		WriteByte(MSG_CSQC, owner->s.v.ammo_cells);
+
+	if (sendflags & WEAPONINFO_ATTACK)
+	{
+		WriteFloat(MSG_CSQC, owner->attack_finished);
+		WriteFloat(MSG_CSQC, owner->client_nextthink);
+		WriteByte(MSG_CSQC, owner->client_thinkindex);
 	}
 
-	if (sendflags & 128)
+	if (sendflags & WEAPONINFO_TIMING)
 	{
-		WriteByte(MSG_ENTITY, self->client_predflags);
-		WriteByte(MSG_ENTITY, self->client_ping);
+		WriteFloat(MSG_CSQC, owner->client_time);
+		WriteByte(MSG_CSQC, owner->s.v.weaponframe);
 	}
-	
+
+	if (sendflags & WEAPONINFO_PRED_PING)
+	{
+		WriteByte(MSG_CSQC, owner->client_predflags);
+		WriteByte(MSG_CSQC, owner->client_ping);
+	}
+
 	return true;
 }
 
+void WeaponPrediction_CreateEnt(void);
 
 void WeaponPrediction_MarkSendFlags(void)
 {
 	gedict_t *wep = self->weapon_pred;
-	int sendflags = 64;
+	int sendflags = WEAPONINFO_TIMING;
 
-
-	if (wep->s.v.impulse != self->s.v.impulse || wep->s.v.weapon != self->s.v.weapon)
+	// Map/mode reloads can leave the player without a valid weapon-info sidecar.
+	if (!wep || wep->s.v.owner != EDICT_TO_PROG(self) || wep->SendEntity != (func_t)WeaponPrediction_SendEntity)
 	{
-		sendflags |= 1;
+		self->weapon_pred = NULL;
+		WeaponPrediction_CreateEnt();
+		wep = self->weapon_pred;
+		if (!wep)
+		{
+			return;
+		}
+	}
+
+	if (!wep->cnt2 && iKey(self, "ezcsqc"))
+	{
+		WPredict_SendDefinitionsTo(self);
+		wep->cnt2 = 1;
+	}
+
+	if (!iKey(self, "ezcsqc_ready"))
+	{
+		return;
+	}
+
+	if (wep->s.v.impulse != self->s.v.impulse || wep->s.v.weapon != self->weapon_index)
+	{
+		sendflags |= WEAPONINFO_INDEX;
 		wep->s.v.impulse = self->s.v.impulse;
-		wep->s.v.weapon = self->s.v.weapon;
+		wep->s.v.weapon = self->weapon_index;
 	}
 	
 	if (wep->s.v.ammo_shells != self->s.v.ammo_shells)
 	{
-		sendflags |= 2;
+		sendflags |= WEAPONINFO_AMMO_SHELLS;
 		wep->s.v.ammo_shells = self->s.v.ammo_shells;
 	}
 	if (wep->s.v.ammo_nails != self->s.v.ammo_nails)
 	{
-		sendflags |= 4;
+		sendflags |= WEAPONINFO_AMMO_NAILS;
 		wep->s.v.ammo_nails = self->s.v.ammo_nails;
 	}
 	if (wep->s.v.ammo_rockets != self->s.v.ammo_rockets)
 	{
-		sendflags |= 8;
+		sendflags |= WEAPONINFO_AMMO_ROCKETS;
 		wep->s.v.ammo_rockets = self->s.v.ammo_rockets;
 	}
 	if (wep->s.v.ammo_cells != self->s.v.ammo_cells)
 	{
-		sendflags |= 16;
+		sendflags |= WEAPONINFO_AMMO_CELLS;
 		wep->s.v.ammo_cells = self->s.v.ammo_cells;
 	}
 
 	if (wep->attack_finished != self->attack_finished || wep->client_think != self->client_think || wep->client_nextthink != self->client_nextthink)
 	{
-		sendflags |= 32;
+		sendflags |= WEAPONINFO_ATTACK;
 		wep->attack_finished = self->attack_finished;
 		wep->client_think = self->client_think;
 		wep->client_nextthink = self->client_nextthink;
@@ -1699,13 +1766,37 @@ void WeaponPrediction_MarkSendFlags(void)
 
 	if (wep->client_predflags != self->client_predflags || wep->client_ping != self->client_ping)
 	{
-		sendflags |= 128;
+		sendflags |= WEAPONINFO_PRED_PING;
 		wep->client_predflags = self->client_predflags;
 		wep->client_ping = self->client_ping;
 	}
 
 
-	trap_SetSendNeeded(NUM_FOR_EDICT(wep), sendflags, 0);
+	trap_SetSendNeeded(NUM_FOR_EDICT(wep), sendflags, NUM_FOR_EDICT(self));
+}
+
+void WeaponPrediction_ResetBaseline(void)
+{
+	gedict_t *wep = self->weapon_pred;
+
+	if (!wep || !iKey(self, "ezcsqc_ready"))
+	{
+		return;
+	}
+
+	// A full baseline starts a new client prediction generation after respawn.
+	wep->s.v.impulse = self->s.v.impulse;
+	wep->s.v.weapon = self->weapon_index;
+	wep->s.v.ammo_shells = self->s.v.ammo_shells;
+	wep->s.v.ammo_nails = self->s.v.ammo_nails;
+	wep->s.v.ammo_rockets = self->s.v.ammo_rockets;
+	wep->s.v.ammo_cells = self->s.v.ammo_cells;
+	wep->attack_finished = self->attack_finished;
+	wep->client_think = self->client_think;
+	wep->client_nextthink = self->client_nextthink;
+	wep->client_predflags = self->client_predflags;
+	wep->client_ping = self->client_ping;
+	SetSendNeeded(wep, SENDFLAGS_ALL, NUM_FOR_EDICT(self));
 }
 
 
@@ -1722,10 +1813,33 @@ void WeaponPrediction_Cleanup(void)
 void WeaponPrediction_CreateEnt(void)
 {
 	gedict_t *wep_values = spawn();
+
 	wep_values->s.v.owner = EDICT_TO_PROG(self);
+	/* Force the first delta pass to include all baseline weapon state. */
+	wep_values->s.v.impulse = -1;
+	wep_values->s.v.weapon = -1;
+	wep_values->s.v.ammo_shells = -1;
+	wep_values->s.v.ammo_nails = -1;
+	wep_values->s.v.ammo_rockets = -1;
+	wep_values->s.v.ammo_cells = -1;
+	wep_values->attack_finished = -1;
+	wep_values->client_think = -1;
+	wep_values->client_nextthink = -1;
+	wep_values->client_predflags = -1;
+	wep_values->client_ping = -1;
+	wep_values->cnt = 0;
+	wep_values->cnt2 = 0;
 	ExtFieldSetSendEntity(wep_values, (func_t)WeaponPrediction_SendEntity);
 	ExtFieldSetPvsFlags(wep_values, 3);
-	SetSendNeeded(wep_values, 0xFFFFFF, 0);
+	if (iKey(self, "ezcsqc"))
+	{
+		WPredict_SendDefinitionsTo(self);
+		wep_values->cnt2 = 1;
+	}
+	if (iKey(self, "ezcsqc_ready"))
+	{
+		SetSendNeeded(wep_values, 0xFFFFFF, NUM_FOR_EDICT(self));
+	}
 	self->weapon_pred = wep_values;
 }
 
@@ -2583,10 +2697,77 @@ int tiecount(void)
 	return (deathmatch == 4 ? 2 : 3);
 }
 
+/**
+ * Gets the absolute score difference from the golden frag snapshot.
+ * @return The absolute difference between team1 and team2 snapshot scores.
+ */
+int GetGoldenFragSnapshotDifference(void)
+{
+	return abs(golden_frag_score_snapshot.team1_score - golden_frag_score_snapshot.team2_score);
+}
+
+/**
+ * Checks if the current game mode is solo (duel or FFA).
+ * @return true if the mode is duel or FFA, false otherwise.
+ */
+qbool isDuelOrFFA(void) {
+	return (isDuel() || isFFA());
+}
+
+/**
+ * Gets the current absolute frag difference between the top two players / teams.
+ * @return The absolute difference in frags. For solo modes (duel/FFA), returns difference
+ *         between the top two players' frags. For team modes, returns difference between team scores.
+ */
+int GetCurrentFragDifference(void) {
+	if (isDuelOrFFA()) {
+		const gedict_t *ed1 = get_ed_scores1();
+		const gedict_t *ed2 = get_ed_scores2();
+		if (ed1 && ed2) {
+			return abs((int)ed1->s.v.frags - (int)ed2->s.v.frags);
+		}
+	}
+	return abs(get_scores1() - get_scores2());
+}
+
+/**
+ * Checks if the golden frag snapshot should be updated mid-match.
+ * @return true if k_overtime is set to SD_GOLDEN_FRAG but k_sudden_death is not yet,
+ *         indicating the match is still in regulation but will use golden frag for overtime.
+ */
+qbool shouldUpdateGoldenFragMidMatch(void) {
+	return (int) cvar("k_overtime") == SD_GOLDEN_FRAG
+	       && (int) k_sudden_death != SD_GOLDEN_FRAG;
+}
+
+/**
+ * Updates the golden frag score snapshot with current scores.
+ * For solo modes (duel/FFA), stores individual player frags.
+ *          For team modes, stores team scores. This snapshot is used to track
+ *          the score difference when golden frag overtime begins.
+ */
+void updateGoldenFragSnapshot(void) {
+	if (isDuelOrFFA()) {
+		const gedict_t *ed1 = get_ed_scores1();
+		const gedict_t *ed2 = get_ed_scores2();
+		if (ed1 && ed2) {
+			golden_frag_score_snapshot.team1_score = (int) ed1->s.v.frags;
+			golden_frag_score_snapshot.team2_score = (int) ed2->s.v.frags;
+		}
+	} else {
+		golden_frag_score_snapshot.team1_score = get_scores1();
+		golden_frag_score_snapshot.team2_score = get_scores2();
+	}
+}
+
 // check sudden death end
 // call this on player death
 void Check_SD(gedict_t *p)
 {
+	if (shouldUpdateGoldenFragMidMatch()) {
+		updateGoldenFragSnapshot();
+	}
+
 	if (!match_in_progress)
 	{
 		return;
@@ -2627,6 +2808,15 @@ void Check_SD(gedict_t *p)
 				EndMatch(0);
 			}
 			return;
+		}
+
+		case SD_GOLDEN_FRAG: {
+			// End when the leader extends the frag lead
+			if (GetCurrentFragDifference() > GetGoldenFragSnapshotDifference()) {
+				EndMatch(0);
+			} else {
+				updateGoldenFragSnapshot();
+			}
 		}
 	}
 }
@@ -4687,7 +4877,7 @@ void PlayerPostThink(void)
 	antilag_log(self, self->antilag_data);
 	if (cvar("sv_antilag") == 1)
 	{
-		self->client_ping = atof(ezinfokey(self, "ping"));
+		self->client_ping = CurrentClientPing();
 		if (cvar("k_midair") && (self->super_damage_finished > g_globalvars.time - (self->client_ping)/1000))
 			self->client_predflags = (int)self->client_predflags | PRDFL_MIDAIR;
 
@@ -4704,8 +4894,11 @@ void PlayerPostThink(void)
 			self->client_predflags = (int)self->client_predflags | PRDFL_MIDAIR;
 	}
 
+	// disable weapon prediction when tracking another player
+	if (self->trackent)
+		self->client_predflags = PRDFL_FORCEOFF;
 	// can't predict hook reliably, so just force prediction off for now
-	if (self->s.v.weapon == IT_HOOK)
+	else if (self->s.v.weapon == IT_HOOK)
 		self->client_predflags = PRDFL_FORCEOFF;
 	else if (!readytostart())
 		self->client_predflags = PRDFL_FORCEOFF;
@@ -4835,7 +5028,7 @@ void SendTeamInfo(gedict_t *t)
 		cl = NUM_FOR_EDICT(p) - 1;
 		h = bound(0, (int)p->s.v.health, 999);
 		a = bound(0, (int)p->s.v.armorvalue, 999);
-		
+
 		shells = bound(0, (int)p->s.v.ammo_shells, 999);
 		nails = bound(0, (int)p->s.v.ammo_nails, 999);
 		rockets = bound(0, (int)p->s.v.ammo_rockets, 999);

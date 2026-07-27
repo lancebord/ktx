@@ -107,6 +107,7 @@ set(SRC_COMMON
 	"${DIR_SRC}/route_lookup.c"
 	"${DIR_SRC}/runes.c"
 	"${DIR_SRC}/server.c"
+	"${DIR_SRC}/sprays.c"
 	"${DIR_SRC}/sp_ai.c"
 	"${DIR_SRC}/sp_boss.c"
 	"${DIR_SRC}/sp_client.c"
@@ -135,6 +136,7 @@ set(SRC_COMMON
 	"${DIR_SRC}/triggers.c"
 	"${DIR_SRC}/vip.c"
 	"${DIR_SRC}/vote.c"
+	"${DIR_SRC}/weaponpred_defs.c"
 	"${DIR_SRC}/weapons.c"
 	"${DIR_SRC}/world.c"
 	)

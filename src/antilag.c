@@ -19,6 +19,73 @@ vec3_t antilag_origin;
 vec3_t antilag_retvec;
 float time_corrected;
 
+void antilag_lagmove_all_playeronly(gedict_t *e, float ms);
+float Physics_PushEntity(float push_x, float push_y, float push_z, int failonstartsolid);
+
+static qbool antilag_current_rewind(gedict_t *e, float *ms)
+{
+	char *rewind = ezinfokey(e, "antilag_rewind");
+
+	if (strnull(rewind))
+		return false;
+
+	*ms = atof(rewind) / 1000;
+	return true;
+}
+
+static float antilag_current_ping(gedict_t *e)
+{
+	char *ping = ezinfokey(e, "ping_current");
+
+	if (!strnull(ping))
+		return atof(ping) / 1000;
+
+	return atof(ezinfokey(e, "ping")) / 1000;
+}
+
+static void antilag_mark_projectile_runtime(gedict_t *e)
+{
+	if (HAVEEXTENSION(G_SETLASTRUNTIME))
+		trap_SetLastRuntime(NUM_FOR_EDICT(e));
+}
+
+static int antilag_check_new_projectile_spawn_touch(gedict_t *owner, gedict_t *e, float rewind_time)
+{
+	vec3_t push;
+	gedict_t *old_self;
+	float fraction;
+	float speed;
+	int original_flags;
+
+	if (newmis != e)
+		return false;
+
+	speed = VectorLength(e->s.v.velocity);
+	VectorClear(push);
+	if (speed > 1)
+	{
+		/*
+		 * Classic newmis performs an immediate 0.05s authoritative sweep.
+		 * The client has a separate 0.02s render lookahead; keep that visual.
+		 */
+		VectorMA(push, 0.05, e->s.v.velocity, push);
+	}
+
+	antilag_lagmove_all_playeronly(owner, rewind_time);
+	old_self = self;
+	self = e;
+	original_flags = (int)self->s.v.flags;
+	self->s.v.flags = ((int)self->s.v.flags) | FL_GODMODE;
+	fraction = Physics_PushEntity(PASSVEC3(push), false);
+	self = old_self;
+
+	if (fraction < 1 || g_globalvars.trace_startsolid)
+		return true;
+
+	e->s.v.flags = original_flags;
+	return false;
+}
+
 void Physics_PushEntityTrace(float push_x, float push_y, float push_z)
 {
 	vec3_t push;
@@ -549,12 +616,16 @@ void antilag_unmove_all(void)
 
 void antilag_lagmove_all_hitscan(gedict_t *e)
 {
-	float ms = (atof(ezinfokey(e, "ping")) / 1000);
+	float ms;
 
 	if (cvar("sv_antilag") != 1)
 		return;
 
-	ms -= (ms < ANTILAG_MAX_PREDICTION ? (1 / 77.0) : ANTILAG_MAX_PREDICTION);
+	if (!antilag_current_rewind(e, &ms))
+	{
+		ms = antilag_current_ping(e);
+		ms -= (ms < ANTILAG_MAX_PREDICTION ? (1 / 77.0) : ANTILAG_MAX_PREDICTION);
+	}
 
 	if (ms > ANTILAG_REWIND_MAXHITSCAN)
 		ms = ANTILAG_REWIND_MAXHITSCAN;
@@ -566,7 +637,7 @@ void antilag_lagmove_all_hitscan(gedict_t *e)
 
 void antilag_lagmove_all_proj(gedict_t *owner, gedict_t *e)
 {
-	float ms = (atof(ezinfokey(owner, "ping")) / 1000);
+	float ms = antilag_current_ping(owner);
 	float step_time, current_time;
 	antilag_t *list;
 	vec3_t old_org;
@@ -575,7 +646,18 @@ void antilag_lagmove_all_proj(gedict_t *owner, gedict_t *e)
 	if (cvar("sv_antilag") != 1)
 		return;
 
-	ms -= (ms < ANTILAG_MAX_PREDICTION ? (1 / 77.0) : ANTILAG_MAX_PREDICTION);
+	/*
+	 * Do not subtract ANTILAG_MAX_PREDICTION here. That mvdsv-derived offset is
+	 * for estimating predicted player hitbox time in hitscan rewind. Projectiles
+	 * are new objects fired from client input, and CSQC renders them immediately
+	 * from the same native newmis phase, so the authoritative projectile must be
+	 * advanced by the full input-to-server time up to the projectile horizon.
+	 */
+	// ms -= (ms < ANTILAG_MAX_PREDICTION ? (1 / 77.0) : ANTILAG_MAX_PREDICTION);
+
+	/* A one-frame ping has no meaningful catch-up beyond the native newmis step. */
+	if (ms <= (1 / 77.0))
+		ms = 0;
 
 	if (ms > ANTILAG_REWIND_MAXPROJECTILE)
 		ms = ANTILAG_REWIND_MAXPROJECTILE;
@@ -615,6 +697,7 @@ void antilag_lagmove_all_proj(gedict_t *owner, gedict_t *e)
 	e->s.v.armorvalue = ms;
 
 	oself = self;
+	antilag_mark_projectile_runtime(e);
 
 	step_time = min(cvar("sv_mintic"), ms);
 	if (step_time * VectorLength(e->s.v.velocity) > 3)
@@ -624,32 +707,25 @@ void antilag_lagmove_all_proj(gedict_t *owner, gedict_t *e)
 	}
 
 	current_time = g_globalvars.time - ms;
-	// newmis reimplementation
-	if (newmis == e)
+	if (antilag_check_new_projectile_spawn_touch(owner, e, g_globalvars.time - current_time))
 	{
-		antilag_lagmove_all_playeronly(owner, (g_globalvars.time - current_time));
-		traceline(PASSVEC3(e->s.v.origin), e->s.v.origin[0] + e->s.v.velocity[0] * 0.05, e->s.v.origin[1] + e->s.v.velocity[1] * 0.05, e->s.v.origin[2] + e->s.v.velocity[2] * 0.05, false, e);
-		trap_setorigin(NUM_FOR_EDICT(e), PASSVEC3(g_globalvars.trace_endpos));
-
-		if (g_globalvars.trace_fraction < 1 || g_globalvars.trace_startsolid)
-		{
-			other = PROG_TO_EDICT(g_globalvars.trace_ent);
-			self = e;
-			self->s.v.flags = ((int)self->s.v.flags) | FL_GODMODE;
-			((void(*)(void))(self->touch))();
-
-			self = oself;
-			antilag_unmove_all(); // emergency antilag cleanup
-			return;
-		}
+		self = oself;
+		antilag_unmove_all(); // emergency antilag cleanup
+		return;
 	}
-	//
 
 	// actual stepping through
-	while (current_time <= g_globalvars.time)
+	while (current_time < g_globalvars.time)
 	{
+		float remaining = g_globalvars.time - current_time;
+
+		if (remaining <= 0)
+			break;
+
 		time_corrected = current_time;
-		step_time = bound(0.01, min(step_time, (g_globalvars.time - current_time) - 0.01), 0.05);
+		step_time = min(step_time, remaining);
+		if (step_time <= 0)
+			break;
 		if (e->s.v.nextthink) { e->s.v.nextthink -= step_time; }
 
 		//antilag_lagmove_all_nohold(owner, (g_globalvars.time - current_time), false);
@@ -686,7 +762,8 @@ void antilag_lagmove_all_proj(gedict_t *owner, gedict_t *e)
 
 void antilag_lagmove_all_proj_bounce(gedict_t *owner, gedict_t *e)
 {
-	float ms = (atof(ezinfokey(owner, "ping")) / 1000);
+	float ms = antilag_current_ping(owner);
+	const float newmis_time = 0.05;
 	float step_time, current_time;
 	antilag_t *list;
 	vec3_t old_org;
@@ -695,12 +772,11 @@ void antilag_lagmove_all_proj_bounce(gedict_t *owner, gedict_t *e)
 	if (cvar("sv_antilag") != 1)
 		return;
 
-	ms -= (ms < ANTILAG_MAX_PREDICTION ? (1 / 77.0) : ANTILAG_MAX_PREDICTION);
-
-	if (ms > ANTILAG_REWIND_MAXPROJECTILE)
-		ms = ANTILAG_REWIND_MAXPROJECTILE;
-	else if (ms < 0)
+	/* Native newmis advances the origin separately from the latency catch-up horizon. */
+	if (ms <= (1 / 77.0))
 		ms = 0;
+	else
+		ms = min(ms, ANTILAG_REWIND_MAXPROJECTILE);
 
 	e->client_time = ms;
 
@@ -733,6 +809,7 @@ void antilag_lagmove_all_proj_bounce(gedict_t *owner, gedict_t *e)
 	e->s.v.armorvalue = ms;
 
 	oself = self;
+	antilag_mark_projectile_runtime(e);
 	self = e;
 
 	step_time = min(cvar("sv_mintic"), ms);
@@ -743,18 +820,24 @@ void antilag_lagmove_all_proj_bounce(gedict_t *owner, gedict_t *e)
 	}
 
 	current_time = g_globalvars.time - ms;
-	// newmis reimplementation
+	// Reproduce MVDSV's native newmis phase before applying any extra catch-up.
 	if (newmis == e)
 	{
-		antilag_lagmove_all_playeronly(owner, (g_globalvars.time - current_time));
-		Physics_Bounce(0.05);
+		antilag_lagmove_all_playeronly(owner, ms);
+		Physics_Bounce(newmis_time);
 	}
-	//
 
 	// actual step through
 	while (current_time < g_globalvars.time)
 	{
-		step_time = bound(0.01, min(step_time, (g_globalvars.time - current_time) - 0.01), 0.05);
+		float remaining = g_globalvars.time - current_time;
+
+		if (remaining <= 0)
+			break;
+
+		step_time = min(step_time, remaining);
+		if (step_time <= 0)
+			break;
 		
 		antilag_lagmove_all_playeronly(owner, (g_globalvars.time - current_time));
 		Physics_Bounce(step_time);
@@ -768,16 +851,3 @@ void antilag_lagmove_all_proj_bounce(gedict_t *owner, gedict_t *e)
 	// restore origins to held values
 	antilag_unmove_all();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

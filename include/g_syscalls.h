@@ -41,8 +41,8 @@ void trap_CenterPrint(intptr_t edn, const char *fmt);
 void trap_Error(const char *fmt);
 intptr_t trap_spawn(void);
 void trap_remove(intptr_t edn);
-void trap_precache_sound(char *name);
-void trap_precache_model(char *name);
+intptr_t trap_precache_sound(char *name);
+intptr_t trap_precache_model(char *name);
 intptr_t trap_precache_vwep_model(char *name);
 void trap_setorigin(intptr_t edn, float origin_x, float origin_y, float origin_z);
 void trap_setsize(intptr_t edn, float min_x, float min_y, float min_z, float max_x, float max_y,
@@ -130,6 +130,8 @@ intptr_t trap_SetBotCMD(intptr_t edn, intptr_t msec, float angles_x, float angle
 						intptr_t impulse);
 
 void trap_setpause(intptr_t pause);
+intptr_t trap_SprayClear(intptr_t id);
+intptr_t trap_SprayClearAll(void);
 
 intptr_t QVMstrftime(char *valbuff, intptr_t sizebuff, const char *fmt, intptr_t offset);
 
@@ -150,6 +152,7 @@ intptr_t trap_MapExtFieldPtr(const char *fieldname);
 intptr_t trap_SetExtFieldPtr(gedict_t *ed, intptr_t fieldref, intptr_t *data, intptr_t size);
 intptr_t trap_GetExtFieldPtr(gedict_t *ed, intptr_t fieldref, intptr_t *data, intptr_t size);
 intptr_t trap_SetSendNeeded(intptr_t subject, intptr_t flags, intptr_t to);
+intptr_t trap_SetLastRuntime(intptr_t edn);
 
 // Checks for server support before call
 int trap_GetExtField_i(gedict_t *ed, const char *fieldname);
