@@ -974,8 +974,9 @@ void FirstFrame(void)
 	RegisterCvar("k_midair");
 	RegisterCvarEx("k_midair_minheight", "1");
 
-	RegisterCvarEx("k_doublejump", "0"); // CPMA/Reflex-style single mid-air jump, once per airtime
-	RegisterCvarEx("k_doublejump_velocity", "270"); // JUMPSPEED by default
+	RegisterCvarEx("k_doublejump", "0"); // CPMA-style double jump: bonus for rejumping quickly (e.g. stairs)
+	RegisterCvarEx("k_doublejump_velocity", "270"); // bonus added to velocity[2] on the chained jump
+	RegisterCvarEx("k_doublejump_window", "400"); // ms since previous jump during which the bonus applies
 
 	RegisterCvarEx("k_killquad", "0");
 
