@@ -5386,7 +5386,7 @@ void latejoin(void)
 	char arg_2[1024];
 	gedict_t *p, *electguard;
 	int team_players = 0, other_team_players = 0;
-	
+
 	if (!match_in_progress) {
 		return;
 	}
@@ -5400,41 +5400,41 @@ void latejoin(void)
 		G_sprint(self, 2, "You're already on a team.\n");
 		return;
 	}
-	
+
 	// Check if player is already being elected
 	if (is_elected(self, etLateJoin)) {
 		G_bprint(2, "%s %s!\n", self->netname, redtext("aborts late join request"));
 		AbortElect();
 		return;
 	}
-	
+
 	// Check if any election is in progress
 	if (get_votes(OV_ELECT)) {
 		G_sprint(self, 2, "An election is already in progress\n");
 		return;
 	}
-	
+
 	// Check election timeout
 	if ((till = Q_rint(self->v.elect_block_till - g_globalvars.time)) > 0) {
 		G_sprint(self, 2, "Wait %d second%s!\n", till, count_s(till));
 		return;
 	}
-	
+
 	// Get team argument
 	if (trap_CmdArgc() < 2) {
 		G_sprint(self, 2, "Usage: latejoin <team>\n");
 		G_sprint(self, 2, "Available teams: %s, %s \n", cvar_string("_k_team1"), cvar_string("_k_team2"));
 		return;
 	}
-	
+
 	trap_CmdArgv(1, arg_2, sizeof(arg_2));
-	
+
 	// Validate team name
 	if (!streq(arg_2, cvar_string("_k_team1")) && !streq(arg_2, cvar_string("_k_team2"))) {
 		G_sprint(self, 2, "Invalid team. Must be %s or %s \n", cvar_string("_k_team1"), cvar_string("_k_team2"));
 		return;
 	}
-	
+
 	// Count players on each team
 	for (p = world; (p = find_plr(p));) {
 		if (p->ca_ready) {
@@ -5445,24 +5445,24 @@ void latejoin(void)
 			}
 		}
 	}
-	
+
 	if (team_players > other_team_players) {
 		G_sprint(self, 2, "Team %s already has more players\n", arg_2);
 		return;
 	}
-	
+
 	// Store the requested team for later use
 	snprintf(self->ljteam, sizeof(self->ljteam), "%s", arg_2);
 	//self->ljteam = arg_2;
-	
+
 	// Start the election
 	self->v.elect = 1;
 	self->v.elect_type = etLateJoin;
-	
-	G_bprint(2, "%s has requested to %s team \x90%s\x91\n", 
+
+	G_bprint(2, "%s has requested to %s team \x90%s\x91\n",
 		self->netname, redtext("late-join"), arg_2);
 	G_bprint(2, "Team \x90%s\x91 members: type %s to approve\n", arg_2, redtext("yes"));
-	
+
 	// Spawn election timeout entity
 	electguard = spawn();
 	electguard->s.v.owner = EDICT_TO_PROG(world);
@@ -6818,7 +6818,7 @@ char* lastscores2str(lsType_t lst)
 
 		case lsRA:
 			return "RA";
-		
+
 		case lsCA:
 			return "Clan Arena";
 
@@ -8866,7 +8866,7 @@ void WillPause(void)
 	{
 		if (time != prevtime) {
 			for (p = world; (p = find_client(p));)
-			{	
+			{
 				stuffcmd(p, "play buttons/switch04.wav\n");
 			}
 
@@ -8950,7 +8950,7 @@ void Spawn666Time(void)
 	// no arguments, show info and return
 	if (match_in_progress || (trap_CmdArgc() == 1))
 	{
-		dmm4_invinc_time = cvar("invinc_time");
+		dmm4_invinc_time = cvar("dmm4_invinc_time");
 		dmm4_invinc_time =
 				dmm4_invinc_time ?
 						bound(0, dmm4_invinc_time, DMM4_INVINCIBLE_MAX) : DMM4_INVINCIBLE_DEFAULT;
@@ -9549,7 +9549,7 @@ void lgc_register_fire_stop(gedict_t *player)
 	if (player->ps.wpn[wpLG].enemyjustkilled == 1)
 	{
 		player->ps.wpn[wpLG].enemyjustkilled = 0;
-		
+
 		// last frag lg statistics
 		player->ps.wpn[wpLG].lastfragdisplayattacks = player->ps.wpn[wpLG].lastfragattacks;
 		player->ps.wpn[wpLG].lastfragdisplayhits = player->ps.wpn[wpLG].lastfraghits;

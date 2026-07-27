@@ -211,7 +211,7 @@ void SP_worldspawn(void)
 
 // the area based ambient sounds MUST be the first precache_sounds
 
-// player precaches     
+// player precaches
 	W_Precache();		// get weapon precaches
 	WPredict_Initialize();
 
@@ -269,7 +269,7 @@ void SP_worldspawn(void)
 
 	trap_precache_sound("boss1/sight1.wav");
 
-// ax sounds    
+// ax sounds
 	trap_precache_sound("weapons/ax1.wav");	// ax swoosh
 	trap_precache_sound("player/axhit1.wav");	// ax hit meat
 	trap_precache_sound("player/axhit2.wav");	// ax hit world
@@ -588,7 +588,7 @@ void Customize_Maps(void)
 
 	if (!cvar("k_end_tele_spawn") && streq("end", mapname)
 #ifdef BOT_SUPPORT
-		&& !bots_enabled() 
+		&& !bots_enabled()
 #endif
 		)
 	{
@@ -952,7 +952,7 @@ void FirstFrame(void)
 	RegisterCvar("srv_practice_mode");
 	RegisterCvar("add_q_aerowalk");
 	RegisterCvar("k_noframechecks");
-	RegisterCvar("invinc_time");
+	RegisterCvar("dmm4_invinc_time");
 	RegisterCvarEx("k_classic_shotgun", "1");
 
 	RegisterCvar("k_no_fps_physics");
@@ -1105,7 +1105,7 @@ void FirstFrame(void)
 	RegisterCvarEx("k_privategame_force_reconnect", "1"); // when voting for private game, kick unauthed players
 
 // below globals changed only here
-	
+
 
 
 	k_matchLess = cvar("k_matchless");
@@ -1930,9 +1930,9 @@ void StartFrame(int time)
 	TeamplayGameTick();
 
 	UpdateProjectileSendNeeded();
-	
+
 	WillPause();
-	
+
 	time_corrected = time;
 	antilag_updateworld();
 }

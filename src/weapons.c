@@ -1160,7 +1160,7 @@ void T_MissileTouch(void)
 		vec3_t diff, traveled;
 		gedict_t *local_explosion;
 		gedict_t *oself;
-		
+
 		T_RadiusDamage_Ignore2(self, PROG_TO_EDICT(self->s.v.owner), 100, other, PROG_TO_EDICT(self->s.v.owner), dtRL);
 		local_explosion = spawn();
 
@@ -1289,7 +1289,7 @@ void W_FireRocket(void)
 				self->s.v.origin[2] + g_globalvars.v_forward[2] * 8 + 16);
 	VectorCopy(newmis->s.v.origin, newmis->pos1);
 
-	// midair 
+	// midair
 	VectorCopy(self->s.v.origin, newmis->s.v.oldorigin);
 	newmis->rad_time = g_globalvars.time;
 
@@ -1517,7 +1517,7 @@ void W_FireLightning(void)
 	VectorAdd(g_globalvars.trace_endpos, tmp, tmp);
 // qqshka - not from 'self->s.v.origin' but from 'org'
 //	LightningDamage( self->s.v.origin, tmp, self, 30 );
-	LightningDamage(org, tmp, self, 7);
+	LightningDamage(org, tmp, self, 8);
 }
 
 //=============================================================================
@@ -1612,9 +1612,9 @@ void W_FireGrenade(void)
 			{
 				self->s.v.items -= IT_GRENADE_LAUNCHER;
 			}
-			
+
 			AmmoUsed(self);
-		}		
+		}
 		else if ((deathmatch != 4) && !k_bloodfest)
 		{
 			self->s.v.currentammo = self->s.v.ammo_rockets = self->s.v.ammo_rockets - 1;
@@ -1637,7 +1637,7 @@ void W_FireGrenade(void)
 	newmis->s.v.solid = SOLID_BBOX;
 	newmis->classname = "grenade";
 
-// set newmis speed     
+// set newmis speed
 
 	VectorCopy(self->s.v.v_angle, ang);
 
@@ -1690,7 +1690,7 @@ void W_FireGrenade(void)
 #ifdef BOT_SUPPORT
 	BotsGrenadeSpawned(newmis);
 #endif
-	
+
 	// we don't want to do newmis stuff, antilag 1 takes care of it for us
 	if (cvar("sv_antilag") == 1)
 	{
@@ -3130,7 +3130,7 @@ void W_WeaponFrame(void)
 				self->s.v.impulse = 0;
 			}
 		}
-		return; // discard +attack till 50 ms after respawn, like ktpro 
+		return; // discard +attack till 50 ms after respawn, like ktpro
 	}
 
 	if (self->wreg_attack) // client simulate +attack via "cmd wreg" feature

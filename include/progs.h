@@ -993,6 +993,7 @@ typedef struct gedict_s
 	float dead_time;						// time at which player last died - used in autorespawn
 	float spawn_time;						// time at which player last spawned,
 											// NOTE: ->spawn_time also used in spawn() function, so we know when edict was spawned
+	float spawn_overheal_decay_time;		// next time to rot spawn overheal health down towards max_health
 	float connect_time;						// time at which player connect
 	float deaths;							// number of times player died
 	float efficiency;						// stores player efficiency rating
