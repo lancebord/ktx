@@ -2052,13 +2052,12 @@ void PutClientInServer(void)
 	self->ca_alive = (isCA() ? CA_CheckAlive(self) : true);
 	self->deathtype = dtNONE;
 	self->classname = "player";
-	self->s.v.health = 125;
+	self->s.v.health = 100;
 	self->s.v.takedamage = DAMAGE_AIM;
 	self->s.v.solid = isCA() ? SOLID_NOT : SOLID_SLIDEBOX;
 	self->s.v.movetype = MOVETYPE_WALK;
 	self->show_hostile = 0;
 	self->s.v.max_health = 100;
-	self->spawn_overheal_decay_time = g_globalvars.time + 3;
 	self->s.v.flags = FL_CLIENT;
 	self->air_finished = g_globalvars.time + 12;
 	self->dmg = 2;		// initial water damage
@@ -2101,6 +2100,17 @@ void PutClientInServer(void)
 	self->invincible_time = 0;
 
 	DecodeLevelParms();
+
+	// spawn overheal: give a bonus 25hp on live spawns in the main deathmatch
+	// modes (duel/ffa/team), rotting back down to 100 in PlayerPreThink.
+	// CA/wipeout, RA, race and hoonymode all manage their own spawn health
+	// later in this function (or don't take damage at all), so leave them be.
+	if ((match_in_progress == 2) && (isDuel() || isFFA() || isTeam()) && !isCA() && !isRA()
+			&& !isRACE() && !isHoonyModeAny())
+	{
+		self->s.v.health = 125;
+		self->spawn_overheal_decay_time = g_globalvars.time + 3;
+	}
 
 	if (!((int)self->s.v.weapon & (int)self->s.v.items))
 		self->s.v.weapon = W_BestWeapon();
