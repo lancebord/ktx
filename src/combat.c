@@ -1219,7 +1219,7 @@ void T_RadiusDamageApply(gedict_t *inflictor, gedict_t *attacker, gedict_t *head
 
 		if (head == attacker)
 		{
-			points = points * 0.5;
+			points = points * 0.6;
 		}
 		// no out of water discharge damage if k_dis 2
 		else if ((cvar("k_dis") == 2) && (dtLG_DIS == dtype) && !head->s.v.waterlevel)

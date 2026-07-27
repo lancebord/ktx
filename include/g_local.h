@@ -586,7 +586,7 @@ void W_SetCurrentAmmo(void);
 void SpawnBlood(vec3_t, float);
 void SpawnMeatSpray(vec3_t org, vec3_t vel);
 void W_FireAxe(void);
-void W_FireSpikes(float ox);
+void W_FireSpikes(void);
 void W_FireLightning(void);
 void LightningDamage(vec3_t p1, vec3_t p2, gedict_t *from, float damage);
 qbool W_CanSwitch(int wp, qbool warn);

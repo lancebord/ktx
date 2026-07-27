@@ -552,7 +552,7 @@ void player_nail1(void)
 	}
 
 	SuperDamageSound();
-	W_FireSpikes(4);
+	W_FireSpikes();
 	self->attack_finished = self->client_time + 0.2;
 	AmmoUsed(self);
 }
@@ -585,7 +585,7 @@ void player_nail2(void)
 	}
 
 	SuperDamageSound();
-	W_FireSpikes(-4);
+	W_FireSpikes();
 	self->attack_finished = self->client_time + 0.2;
 	AmmoUsed(self);
 }
@@ -596,7 +596,7 @@ void player_light1(void)
 {
 	self->s.v.frame = 105;
 	self->client_think = (func_t)player_light2;
-	self->client_nextthink = self->client_time + 0.1;
+	self->client_nextthink = self->client_time + 0.048;
 	self->client_thinkindex = 1;
 
 	self->think = (func_t)player_dummyanim;
@@ -630,14 +630,14 @@ void player_light1(void)
 	W_FireLightning();
 	//antilag_unmove_all();
 
-	self->attack_finished = self->client_time + 0.2;
+	self->attack_finished = self->client_time + 0.1;
 }
 
 void player_light2(void)
 {
 	self->s.v.frame = 106;
 	self->client_think = (func_t)player_light1;
-	self->client_nextthink = self->client_time + 0.1;
+	self->client_nextthink = self->client_time + 0.048;
 	self->client_thinkindex = 1;
 
 	self->think = (func_t)player_dummyanim;
@@ -671,7 +671,7 @@ void player_light2(void)
 	W_FireLightning();
 	//antilag_unmove_all();
 
-	self->attack_finished = self->client_time + 0.2;
+	self->attack_finished = self->client_time + 0.1;
 }
 
 //============================================================================

@@ -8950,7 +8950,7 @@ void Spawn666Time(void)
 	// no arguments, show info and return
 	if (match_in_progress || (trap_CmdArgc() == 1))
 	{
-		dmm4_invinc_time = cvar("dmm4_invinc_time");
+		dmm4_invinc_time = cvar("invinc_time");
 		dmm4_invinc_time =
 				dmm4_invinc_time ?
 						bound(0, dmm4_invinc_time, DMM4_INVINCIBLE_MAX) : DMM4_INVINCIBLE_DEFAULT;

@@ -2454,14 +2454,15 @@ void PutClientInServer(void)
 			}
 		}
 	}
+	
+	float invinc_time = cvar("invinc_time");
 
 	if ((deathmatch == 4 || k_bloodfest) && (match_in_progress == 2))
 	{
-		float dmm4_invinc_time = cvar("dmm4_invinc_time");
 
 		if (cvar("k_midair"))
 		{
-			dmm4_invinc_time = -1; // means off
+			invinc_time = -1; // means off
 
 			self->s.v.ammo_shells = 0;
 			self->s.v.ammo_nails = 0;
@@ -2550,19 +2551,6 @@ void PutClientInServer(void)
 			items |= IT_ARMOR3; // add red armor
 		}
 
-		// 0 evalutes to DMM4_INVINCIBLE_DEFAULT, negative value disable invincible
-		dmm4_invinc_time = (
-				dmm4_invinc_time ?
-						bound(0, dmm4_invinc_time, DMM4_INVINCIBLE_MAX) : DMM4_INVINCIBLE_DEFAULT);
-
-		if (dmm4_invinc_time > 0)
-		{
-			items |= IT_INVULNERABILITY;
-
-			self->invincible_time = 1;
-			self->invincible_finished = g_globalvars.time + dmm4_invinc_time;
-		}
-
 		self->s.v.items = items;
 
 		// default to spawning with rl, except if instagib or gren_mode is on
@@ -2578,6 +2566,22 @@ void PutClientInServer(void)
 		{
 			self->s.v.weapon = IT_ROCKET_LAUNCHER;
 		}
+	}
+
+	if (match_in_progress == 2)
+	{
+	    invinc_time = (invinc_time ?
+		bound(0, invinc_time, DMM4_INVINCIBLE_MAX) : DMM4_INVINCIBLE_DEFAULT);
+
+	    if (invinc_time > 0)
+	    {
+		items = self->s.v.items;
+		items |= IT_INVULNERABILITY;
+		self->s.v.items = items;
+
+		self->invincible_time = 1;
+		self->invincible_finished = g_globalvars.time + invinc_time;
+	    }
 	}
 
 	if (deathmatch == 5 && match_in_progress == 2)

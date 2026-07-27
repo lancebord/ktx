@@ -196,13 +196,15 @@ float T_Heal(gedict_t *e, float healamount, float ignore)
 		e->s.v.health = other->s.v.max_health;
 	}
 
-	if (FrogbotItemPickupBonus() && e->s.v.health > 300)
+	float max_overheal = FrogbotItemPickupBonus() ? 300 : 175;
+
+	if (ignore && e->s.v.health > max_overheal)
 	{
-		e->s.v.health = 300;
+		e->s.v.health = max_overheal;
 	}
-	else if (e->s.v.health > 250)
+	else if (!ignore && e->s.v.health > other->s.v.max_health)
 	{
-		e->s.v.health = 250;
+		e->s.v.health = other->s.v.max_health;
 	}
 
 	real_healamount = e->s.v.health - real_healamount; // so heal amount is current - old health
@@ -471,7 +473,7 @@ void armor_touch(void)
 	if (!strcmp(self->classname, "item_armor1"))
 	{
 		armorType = itGA;
-		type = (k_yawnmode ? 0.4 : 0.3); // Yawnmode: changed armor protection
+		type = (k_yawnmode ? 0.6 : 0.6); // Yawnmode: changed armor protection
 		value = 100;
 		bit = IT_ARMOR1;
 	}
@@ -485,7 +487,7 @@ void armor_touch(void)
 	else if (!strcmp(self->classname, "item_armorInv"))
 	{
 		armorType = itRA;
-		type = (k_yawnmode ? 0.8 : 0.8); // Yawnmode: changed armor protection
+		type = (k_yawnmode ? 0.6 : 0.6); // Yawnmode: changed armor protection
 		value = 200;
 		bit = IT_ARMOR3;
 	}
@@ -647,9 +649,9 @@ void bound_other_ammo(void)
 		other->s.v.ammo_rockets = FrogbotItemPickupBonus() ? 255 : 100;
 	}
 
-	if (other->s.v.ammo_cells > 100)
+	if (other->s.v.ammo_cells > 200)
 	{
-		other->s.v.ammo_cells = FrogbotItemPickupBonus() ? 255 : 100;
+		other->s.v.ammo_cells = FrogbotItemPickupBonus() ? 255 : 200;
 	}
 }
 float RankForWeapon(float w)
@@ -960,7 +962,7 @@ void weapon_touch(void)
 		}
 		else
 		{
-			other->s.v.ammo_cells += 15;
+			other->s.v.ammo_cells += 100;
 		}
 	}
 	else
@@ -1261,7 +1263,7 @@ void ammo_touch(void)
 	}
 	else if (weapon == 4) // cells
 	{
-		if (other->s.v.ammo_cells >= 100)
+		if (other->s.v.ammo_cells >= 200)
 		{
 			return;
 		}
@@ -1457,12 +1459,12 @@ void SP_item_cells(void)
 	if ((int)(self->s.v.spawnflags) & WEAPON_BIG2)
 	{
 		setmodel(self, "maps/b_batt1.bsp");
-		self->aflag = 12;
+		self->aflag = 50;
 	}
 	else
 	{
 		setmodel(self, "maps/b_batt0.bsp");
-		self->aflag = 6;
+		self->aflag = 25;
 	}
 
 	self->s.v.weapon = 4;
