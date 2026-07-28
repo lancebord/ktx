@@ -630,7 +630,7 @@ void player_light1(void)
 	W_FireLightning();
 	//antilag_unmove_all();
 
-	self->attack_finished = self->client_time + 0.1;
+	self->attack_finished = self->client_time + 0.05;
 }
 
 void player_light2(void)
@@ -671,7 +671,7 @@ void player_light2(void)
 	W_FireLightning();
 	//antilag_unmove_all();
 
-	self->attack_finished = self->client_time + 0.1;
+	self->attack_finished = self->client_time + 0.05;
 }
 
 //============================================================================

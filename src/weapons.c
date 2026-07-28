@@ -1443,9 +1443,9 @@ void W_FireLightning(void)
 				}
 
 				antilag_lagmove_all_hitscan(self);
-				T_RadiusDamage(self, self, 35 * cells, world, dtLG_DIS);
+				T_RadiusDamage(self, self, 9 * cells, world, dtLG_DIS);
 				antilag_unmove_all();
-				DischargeEvent((35 * cells) + 40, self->s.v.origin);
+				DischargeEvent((9 * cells) + 40, self->s.v.origin);
 
 				return;
 			}
@@ -1463,9 +1463,9 @@ void W_FireLightning(void)
 			}
 
 			antilag_lagmove_all_hitscan(self);
-			T_RadiusDamage(self, self, 35 * cells, world, dtLG_DIS);
+			T_RadiusDamage(self, self, 9 * cells, world, dtLG_DIS);
 			antilag_unmove_all();
-			DischargeEvent((35 * cells) + 40, self->s.v.origin);
+			DischargeEvent((9 * cells) + 40, self->s.v.origin);
 
 			return;
 		}
@@ -1517,7 +1517,7 @@ void W_FireLightning(void)
 	VectorAdd(g_globalvars.trace_endpos, tmp, tmp);
 // qqshka - not from 'self->s.v.origin' but from 'org'
 //	LightningDamage( self->s.v.origin, tmp, self, 30 );
-	LightningDamage(org, tmp, self, 8);
+	LightningDamage(org, tmp, self, 6);
 }
 
 //=============================================================================
@@ -2471,7 +2471,7 @@ void W_Attack(void)
 			break;
 
 		case IT_LIGHTNING:
-			self->attack_finished = self->client_time + 0.1;
+			self->attack_finished = self->client_time + 0.05;
 			sound(self, CHAN_AUTO, "weapons/lstart.wav", 1, ATTN_NORM);
 			self->s.v.ltime = g_globalvars.time;
 			player_light1();
