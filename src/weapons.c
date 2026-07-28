@@ -2423,7 +2423,7 @@ void W_Attack(void)
 			}
 			else
 			{
-				self->attack_finished = self->client_time + 1.0;
+				self->attack_finished = self->client_time + 0.9;
 			}
 
 			W_FireSuperShotgun();
