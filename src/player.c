@@ -630,7 +630,7 @@ void player_light1(void)
 	W_FireLightning();
 	//antilag_unmove_all();
 
-	self->attack_finished = self->client_time + 0.05;
+	self->attack_finished = self->client_time + 0.1;
 }
 
 void player_light2(void)
@@ -671,7 +671,7 @@ void player_light2(void)
 	W_FireLightning();
 	//antilag_unmove_all();
 
-	self->attack_finished = self->client_time + 0.05;
+	self->attack_finished = self->client_time + 0.1;
 }
 
 //============================================================================
@@ -1163,7 +1163,7 @@ void VelocityForDamage(float dm, vec3_t v)
 		v[2] = 100 + 240 * g_random();
 		v[0] = v[0] + (200 * crandom());
 		v[1] = v[1] + (200 * crandom());
-		//dprint ("Velocity gib\n");                
+		//dprint ("Velocity gib\n");
 	}
 	else
 	{

@@ -1518,7 +1518,7 @@ void W_FireLightning(void)
 	VectorAdd(g_globalvars.trace_endpos, tmp, tmp);
 // qqshka - not from 'self->s.v.origin' but from 'org'
 //	LightningDamage( self->s.v.origin, tmp, self, 30 );
-	LightningDamage(org, tmp, self, 7);
+	LightningDamage(org, tmp, self, 14);
 }
 
 //=============================================================================
@@ -2472,7 +2472,7 @@ void W_Attack(void)
 			break;
 
 		case IT_LIGHTNING:
-			self->attack_finished = self->client_time + 0.05;
+			self->attack_finished = self->client_time + 0.1;
 			sound(self, CHAN_AUTO, "weapons/lstart.wav", 1, ATTN_NORM);
 			self->s.v.ltime = g_globalvars.time;
 			player_light1();
