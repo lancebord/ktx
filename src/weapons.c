@@ -55,7 +55,6 @@ void W_Precache(void)
 	trap_precache_sound("weapons/ric1.wav");	// ricochet (used in c code)
 	trap_precache_sound("weapons/ric2.wav");	// ricochet (used in c code)
 	trap_precache_sound("weapons/ric3.wav");	// ricochet (used in c code)
-	trap_precache_sound("weapons/spike1.wav");	// spikes
 	trap_precache_sound("weapons/spike2.wav");	// super spikes
 	trap_precache_sound("weapons/tink1.wav");	// spikes tink (used in c code)
 	trap_precache_sound("weapons/grenade.wav");	// grenade launcher
@@ -1939,7 +1938,7 @@ void W_FireSpikes(void)
 
 	self->ps.wpn[wpSNG].attacks += bullets;
 	// lowkey hacky solution to sound pred for client compat atm
-	sound(self, CHAN_AUTO, "weapons/spike1.wav", 1, ATTN_NORM);
+	sound(self, CHAN_AUTO, "weapons/spike2.wav", 1, ATTN_NORM);
 
 	g_globalvars.msg_entity = EDICT_TO_PROG(self);
 
