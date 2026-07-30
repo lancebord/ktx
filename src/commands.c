@@ -2710,14 +2710,14 @@ void ReportMe(void)
 
 void ToggleRespawns(void)
 {
-	int k_spw = bound(-1, cvar("k_spw"), 4);
+	int k_spw = bound(-1, cvar("k_spw"), 5);
 
 	if (match_in_progress)
 	{
 		return;
 	}
 
-	if (++k_spw > 4)
+	if (++k_spw > 5)
 	{
 		k_spw = -1;
 	}

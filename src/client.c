@@ -1064,6 +1064,30 @@ static float GetEffectiveSpawnRadius(gedict_t *spot, float default_radius)
 
 /*
  ============
+ FindDuelOpponent
+
+ In a duel (1 vs 1) game, returns the other active player.
+ Returns NULL if there isn't exactly one other active player to target
+ (e.g. opponent hasn't connected/spawned yet).
+ ============
+ */
+static gedict_t* FindDuelOpponent(void)
+{
+	gedict_t *p;
+
+	for (p = world; (p = find_plr(p));)
+	{
+		if (p != self)
+		{
+			return p;
+		}
+	}
+
+	return NULL;
+}
+
+/*
+ ============
  SelectSpawnPoint
 
  Returns the entity to spawn at
@@ -1074,6 +1098,7 @@ gedict_t* Sub_SelectSpawnPoint(char *spawnname)
 	gedict_t *spot;
 	gedict_t *spots;			// chain of "valid" spots
 	gedict_t *thing;
+	gedict_t *opponent;		// used by k_spw 5, in duel only
 	int numspots;		// count of "valid" spots
 	int totalspots;
 	int pcount;
@@ -1134,11 +1159,11 @@ gedict_t* Sub_SelectSpawnPoint(char *spawnname)
 				}
 			}
 
-			// k_spw 2 and 3 and 4 feature, if player is spawned not far away and run
+			// k_spw 2 and 3 and 4 and 5 feature, if player is spawned not far away and run
 			// around spot - treat this spot as not valid.
 			// k_1spawn store this "not far away" time.
 			// k_1spawn is _also_ set after player passed teleport
-			if (!(((k_spw == 2) || (k_spw == 3) || (k_spw == 4)) && (match_in_progress == 2)
+			if (!(((k_spw == 2) || (k_spw == 3) || (k_spw == 4) || (k_spw == 5)) && (match_in_progress == 2)
 					&& (thing->k_1spawn < g_globalvars.time)))
 			{
 //				G_bprint(2, "ignore player: %s\n", thing->netname);
@@ -1146,8 +1171,8 @@ gedict_t* Sub_SelectSpawnPoint(char *spawnname)
 			}
 		}
 
-		// NOTE: k_spw != 4
-		if (!k_yawnmode && k_spw && (k_spw != 4) && (match_in_progress == 2)
+		// NOTE: k_spw != 4 and k_spw != 5
+		if (!k_yawnmode && k_spw && (k_spw != 4) && (k_spw != 5) && (match_in_progress == 2)
 				&& (self->k_lastspawn == spot))
 		{
 //			G_bprint(2, "ignore spot\n");
@@ -1301,6 +1326,43 @@ gedict_t* Sub_SelectSpawnPoint(char *spawnname)
 
 		return spawnp;
 	}
+	else if ((k_spw == 5) && isDuel() && (match_in_progress == 2)
+			&& (opponent = FindDuelOpponent()))
+	{
+		// k_spw 5 feature (duel only): spawn as far as possible from the opponent.
+		// Find the two valid spots furthest from the opponent's current position,
+		// and pick one of them at random.
+		gedict_t *best1 = spots, *best2 = spots;
+		float best1_dist = -1, best2_dist = -1;
+		int i;
+
+		for (spot = spots, i = 0; i < numspots; i++, spot = PROG_TO_EDICT(spot->s.v.goalentity))
+		{
+			float dist = VectorDistance(spot->s.v.origin, opponent->s.v.origin);
+
+			if (dist >= best1_dist)
+			{
+				best2 = best1;
+				best2_dist = best1_dist;
+				best1 = spot;
+				best1_dist = dist;
+			}
+			else if (dist > best2_dist)
+			{
+				best2 = spot;
+				best2_dist = dist;
+			}
+		}
+
+		spot = i_rnd(0, 1) ? best1 : best2;
+
+		if ((totalspots > 2) && (match_in_progress == 2))
+		{
+			self->k_lastspawn = spot;
+		}
+
+		return spot;
+	}
 	else
 	{
 		// Original spawnmodes
@@ -1325,8 +1387,9 @@ gedict_t* SelectSpawnPoint(char *spawnname)
 	gedict_t *k_lastspawn = self->k_lastspawn; // we need remember this before calling Sub_SelectSpawnPoint()
 	gedict_t *spot = Sub_SelectSpawnPoint(spawnname);
 
-	// k_spw 4 feature, recheck spawn poit second time if we select same spawn point in row, so it low chance to get same spawn point
-	if ((match_in_progress == 2) && (k_lastspawn == spot) && (cvar("k_spw") == 4 || cvar("k_clan_arena") == 2))
+	// k_spw 4 and 5 feature, recheck spawn poit second time if we select same spawn point in row, so it low chance to get same spawn point
+	if ((match_in_progress == 2) && (k_lastspawn == spot)
+			&& (cvar("k_spw") == 4 || cvar("k_spw") == 5 || cvar("k_clan_arena") == 2))
 	{
 		self->k_lastspawn = k_lastspawn;
 		spot = Sub_SelectSpawnPoint(spawnname);
