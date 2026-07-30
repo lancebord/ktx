@@ -4269,6 +4269,7 @@ const char _1on1_um_init[] =
 	"k_overtime 1\n"				// overtime type = time based
 	"k_exttime 3\n"					// overtime 3mins
 	"k_pow 0\n"						// powerups
+	"k_spw 5\n"						// smart spawns
 	"k_membercount 0\n"				// no efect in duel
 	"k_lockmin 0\n"					// no efect in duel
 	"k_lockmax 0\n"					// no efect in duel
