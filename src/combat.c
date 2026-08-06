@@ -851,9 +851,7 @@ void T_Damage(gedict_t *targ, gedict_t *inflictor, gedict_t *attacker, float dam
 	// damage numbers
 	if (((int)unbound_dmg_dealt > 0) && (attacker->ct == ctPlayer) && (targ->ct == ctPlayer))
 	{
-		int di = atoi(ezinfokey(attacker, "di"));
-
-		if (di && ((di == 2) || (attacker != targ)))
+		if (attacker != targ)
 		{
 			qbool has_eyes = ((int)targ->s.v.items) & IT_INVISIBILITY;
 
