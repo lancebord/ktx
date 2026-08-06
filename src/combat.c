@@ -849,8 +849,7 @@ void T_Damage(gedict_t *targ, gedict_t *inflictor, gedict_t *attacker, float dam
 	}
 
 	// Only send to clients during standby
-	if (!match_in_progress && ((int)unbound_dmg_dealt > 0) && (attacker->ct == ctPlayer)
-			&& (targ->ct == ctPlayer))
+	if (((int)unbound_dmg_dealt > 0) && (attacker->ct == ctPlayer) && (targ->ct == ctPlayer))
 	{
 		int di = atoi(ezinfokey(attacker, "di"));
 
