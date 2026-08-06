@@ -848,7 +848,7 @@ void T_Damage(gedict_t *targ, gedict_t *inflictor, gedict_t *attacker, float dam
 		trap_multicast(PASSVEC3(targ->s.v.origin), MULTICAST_MVD_HIDDEN);
 	}
 
-	// Only send to clients during standby
+	// damage numbers
 	if (((int)unbound_dmg_dealt > 0) && (attacker->ct == ctPlayer) && (targ->ct == ctPlayer))
 	{
 		int di = atoi(ezinfokey(attacker, "di"));
