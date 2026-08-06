@@ -196,7 +196,7 @@ float T_Heal(gedict_t *e, float healamount, float ignore)
 		e->s.v.health = other->s.v.max_health;
 	}
 
-	float max_overheal = FrogbotItemPickupBonus() ? 300 : 175;
+	float max_overheal = FrogbotItemPickupBonus() ? 300 : 200;
 
 	if (ignore && e->s.v.health > max_overheal)
 	{
@@ -408,8 +408,8 @@ void item_megahealth_rot(void)
 
 	if (deathmatch != 2)	// deathmatch 2 is silly old rules
 	{
-		self->s.v.nextthink = g_globalvars.time + 20;
-		stuffcmd_flags(other, STUFFCMD_DEMOONLY, "//ktx timer %d %d\n", NUM_FOR_EDICT(self), 20);
+		self->s.v.nextthink = g_globalvars.time + 30;
+		stuffcmd_flags(other, STUFFCMD_DEMOONLY, "//ktx timer %d %d\n", NUM_FOR_EDICT(self), 30);
 		self->think = (func_t) SUB_regen;
 	}
 

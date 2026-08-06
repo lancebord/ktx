@@ -596,7 +596,7 @@ void player_light1(void)
 {
 	self->s.v.frame = 105;
 	self->client_think = (func_t)player_light2;
-	self->client_nextthink = self->client_time + 0.048;
+	self->client_nextthink = self->client_time + 0.05;
 	self->client_thinkindex = 1;
 
 	self->think = (func_t)player_dummyanim;
@@ -637,7 +637,7 @@ void player_light2(void)
 {
 	self->s.v.frame = 106;
 	self->client_think = (func_t)player_light1;
-	self->client_nextthink = self->client_time + 0.048;
+	self->client_nextthink = self->client_time + 0.05;
 	self->client_thinkindex = 1;
 
 	self->think = (func_t)player_dummyanim;

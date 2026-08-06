@@ -1518,7 +1518,7 @@ void W_FireLightning(void)
 	VectorAdd(g_globalvars.trace_endpos, tmp, tmp);
 // qqshka - not from 'self->s.v.origin' but from 'org'
 //	LightningDamage( self->s.v.origin, tmp, self, 30 );
-	LightningDamage(org, tmp, self, 14);
+	LightningDamage(org, tmp, self, 8);
 }
 
 //=============================================================================
