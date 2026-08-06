@@ -818,7 +818,7 @@ void FireBullets(float shotcount, vec3_t dir, float spread_x, float spread_y, fl
 		traceline(PASSVEC3(src), PASSVEC3(tmp), false, self);
 		if (g_globalvars.trace_fraction != 1.0)
 		{
-			TraceAttack(5, direction, classic_shotgun);
+			TraceAttack(8, direction, classic_shotgun);
 		}
 
 		shotcount = shotcount - 1;
@@ -906,7 +906,7 @@ void W_FireShotgun(void)
 void W_FireShotgun(void)
 {
 	vec3_t dir;
-	int bullets = 6;
+	int bullets = 4;
 
 	WS_Mark(self, wpSG);
 
@@ -964,7 +964,7 @@ void W_FireShotgun(void)
 void W_FireSuperShotgun(void)
 {
 	vec3_t dir;
-	int bullets = 25;
+	int bullets = 16;
 
 	if (self->s.v.currentammo == 1)
 	{
@@ -1133,8 +1133,8 @@ void T_MissileTouch(void)
 	}
 	else
 	{
-		// 110 dmg on direct hits for all other cases
-		damg = 110;
+		// 100 dmg on direct hits for all other cases
+		damg = 100;
 	}
 
 	if (other->s.v.takedamage)
@@ -1518,7 +1518,7 @@ void W_FireLightning(void)
 	VectorAdd(g_globalvars.trace_endpos, tmp, tmp);
 // qqshka - not from 'self->s.v.origin' but from 'org'
 //	LightningDamage( self->s.v.origin, tmp, self, 30 );
-	LightningDamage(org, tmp, self, 8);
+	LightningDamage(org, tmp, self, 7);
 }
 
 //=============================================================================
