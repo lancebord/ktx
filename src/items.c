@@ -2672,7 +2672,7 @@ void DropBackpack(void)
 	char *dropname;
 	qbool fresh_packs = (cvar("k_freshteams") && cvar("k_freshteams_limit_packs"));
 
-	if (k_bloodfest)
+	if (k_bloodfest || x76_enabled())
 	{
 		return;
 	}

@@ -1093,6 +1093,7 @@ void FirstFrame(void)
 
 	RegisterCvar("k_lgcmode");
 	RegisterCvar("k_tot_mode");
+	RegisterCvar(X76_VARIABLE);
 	RegisterCvar("k_kteam_messages");
 
 	// private games
@@ -1518,6 +1519,11 @@ void SetMode4ServerInfo(void)
 			strlcat(mode, "-lgc", sizeof(mode));
 		}
 
+		if (x76_enabled())
+		{
+			strlcat(mode, "-x76", sizeof(mode));
+		}
+
 		if (cvar("k_clan_arena") == 1)
 		{
 			strlcat(mode, "-ca", sizeof(mode));
@@ -1716,7 +1722,10 @@ void FixRules(void)
 	{
 		if (((timelimit == 0) && (fraglimit == 0)) || (timelimit > k_tt) || (timelimit < 0))
 		{
-			if (!isHoonyModeDuel() && !isRACE() && !isCA())
+			// x76 matchless runs as one endless match, so it may have neither limit
+			qbool x76_endless = (k_matchLess && x76_enabled() && (timelimit == 0));
+
+			if (!isHoonyModeDuel() && !isRACE() && !isCA() && !x76_endless)
 			{
 				cvar_fset("timelimit", timelimit = k_tt); // sensible default if no max set
 			}
@@ -1779,6 +1788,11 @@ void FixRules(void)
 	if (cvar("k_instagib") && deathmatch != 4)
 	{
 		cvar_fset("k_instagib", 0); // instagib only in dmm4
+	}
+
+	if (x76_enabled() && deathmatch != 4)
+	{
+		cvar_fset(X76_VARIABLE, 0); // x76 only in dmm4
 	}
 
 	if (cvar("k_freshteams") && deathmatch != 1)

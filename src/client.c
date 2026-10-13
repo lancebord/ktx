@@ -2537,6 +2537,20 @@ void PutClientInServer(void)
 			// Red armor + LG
 			items = IT_LIGHTNING | IT_ARMOR3;
 		}
+		else if (x76_enabled())
+		{
+			self->s.v.ammo_shells = 0;
+			self->s.v.ammo_nails = 0;
+			self->s.v.ammo_rockets = 0;
+			self->s.v.ammo_cells = 255;
+
+			self->s.v.armorvalue = 0;
+			self->s.v.armortype = 0;
+			self->s.v.health = X76_MAX_HEALTH;
+
+			// LG only, no armor
+			items = IT_LIGHTNING;
+		}
 		else if (tot_mode_enabled())
 		{
 			self->s.v.ammo_nails = 255;
@@ -2607,6 +2621,10 @@ void PutClientInServer(void)
 		if (cvar("k_instagib"))
 		{
 			self->s.v.weapon = IT_SHOTGUN;
+		}
+		else if (x76_enabled())
+		{
+			self->s.v.weapon = IT_LIGHTNING;
 		}
 		else if (cvar("k_dmm4_gren_mode"))
 		{

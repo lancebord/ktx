@@ -850,7 +850,7 @@ void SM_PrepareMap(void)
 	for (p = world; (p = nextent(p));)
 	{
 		// going for the if content record..
-		if (isRA() || isRACE() || ((deathmatch == 4) && (cvar("k_instagib") || cvar("k_midair")))
+		if (isRA() || isRACE() || ((deathmatch == 4) && (cvar("k_instagib") || cvar("k_midair") || x76_enabled()))
 				|| cvar("k_noitems") || k_bloodfest)
 		{
 			if (streq(p->classname, "weapon_nailgun") || streq(p->classname, "weapon_supernailgun")
@@ -1626,6 +1626,10 @@ void PrintCountdown(int seconds)
 	{
 		mode = redtext("LGC");
 	}
+	else if (x76_enabled())
+	{
+		mode = redtext("x76");
+	}
 	else if (isHoonyModeTDM())
 	{
 		mode = redtext("BlitzTDM");
@@ -2330,6 +2334,11 @@ char* CompilateDemoName(void)
 		if (cvar("k_instagib"))
 		{
 			strlcat(demoname, "_instagib", sizeof(demoname));
+		}
+
+		if (x76_enabled())
+		{
+			strlcat(demoname, "_x76", sizeof(demoname));
 		}
 
 		for (vs = "_", p = world; (p = find_plr(p));)

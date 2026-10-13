@@ -115,6 +115,7 @@ void ToggleFreshTime(void);
 void ToggleNoSweep(void);
 void ToggleInstagib(void);
 void ToggleLGC(void);
+void ToggleX76(void);
 void ToggleCGKickback(void);
 void ToggleToT(void);
 void TogglePowerups(void);
@@ -570,6 +571,7 @@ const char CD_NODESC[] = "no desc";
 #define CD_INSTAGIB			"instagib settings"
 #define CD_BERZERK			"berzerk settings"
 #define CD_LGC				"lgc mode"
+#define CD_X76				"x76 mode (lg only, vampiric)"
 #define CD_CG_KB			"toggle coilgun kickback in instagib"
 #define CD_TIME				"show server time"
 #define CD_GREN_MODE		"grenades mode"
@@ -965,6 +967,7 @@ cmd_t cmds[] =
 	{ "instagib", 					ToggleInstagib, 				0, 			CF_PLAYER | CF_SPC_ADMIN, 												CD_INSTAGIB },
 	{ "berzerk", 					ToggleBerzerk, 					0, 			CF_PLAYER | CF_SPC_ADMIN, 												CD_BERZERK },
 	{ "lgcmode", 					ToggleLGC, 						0, 			CF_PLAYER | CF_SPC_ADMIN, 												CD_LGC },
+	{ "x76", 						ToggleX76, 						0, 			CF_PLAYER | CF_SPC_ADMIN, 												CD_X76 },
 	{ "totmode", 					ToggleToT, 						0, 			CF_PLAYER | CF_SPC_ADMIN, 												CD_TOT },
 	{ "instagib_coilgun_kickback",	ToggleCGKickback, 				0, 			CF_PLAYER | CF_SPC_ADMIN, 												CD_CG_KB },
 	{ "time", 						sv_time, 						0, 			CF_BOTH | CF_MATCHLESS, 												CD_TIME },
@@ -4232,6 +4235,7 @@ const char common_um_init[] =
 	"k_midair 0\n"					// midair off
 	LGCMODE_VARIABLE " 0\n"			// LGC mode off
 	TOT_MODE_VARIABLE " 0\n"			// ToT mode off
+	X76_VARIABLE " 0\n"				// x76 mode off
 	"fraglimit 0\n"					// fraglimit %)
 	"dp 1\n"						// drop pack
 	"dq 0\n"						// drop quad
@@ -4860,6 +4864,11 @@ void UserMode(float umode)
 	if (streq(um, "matchless") && (cvar("k_use_matchless_dir") == 2))
 	{
 		cfg_name = va("configs/usermodes/%s/ctf.cfg", um);
+	}
+	// Likewise "k_use_matchless_dir 3" loads /matchless/x76.cfg for an endless x76 server
+	else if (streq(um, "matchless") && (cvar("k_use_matchless_dir") == 3))
+	{
+		cfg_name = va("configs/usermodes/%s/x76.cfg", um);
 	}
 
 	if (can_exec(cfg_name))
@@ -7602,6 +7611,11 @@ void ToggleMidair(void)
 		cvar_set(TOT_MODE_VARIABLE, "0");
 	}
 
+	if (cvar(X76_VARIABLE))
+	{
+		cvar_set(X76_VARIABLE, "0");
+	}
+
 	if (cvar("k_dmm4_gren_mode"))
 	{
 		cvar_set("k_dmm4_gren_mode", "0"); // If midair is enabled, disable gren_mode
@@ -7818,6 +7832,11 @@ void ToggleInstagib(void)
 		cvar_set(TOT_MODE_VARIABLE, "0");
 	}
 
+	if (cvar(X76_VARIABLE))
+	{
+		cvar_set(X76_VARIABLE, "0");
+	}
+
 	if (cvar("k_dmm4_gren_mode"))
 	{
 		cvar_set("k_dmm4_gren_mode", "0"); // If instagib is enabled, disable gren_mode
@@ -7913,6 +7932,11 @@ void ToggleLGC(void)
 		cvar_set("k_instagib", "0");
 	}
 
+	if (cvar(X76_VARIABLE))
+	{
+		cvar_set(X76_VARIABLE, "0");
+	}
+
 	// disable dmgfrags
 	if (cvar("k_dmgfrags"))
 	{
@@ -7925,6 +7949,60 @@ void ToggleLGC(void)
 	cvar_set(LGCMODE_VARIABLE, k_lgc ? "1" : "0");
 
 	cvar_toggle_msg(self, LGCMODE_VARIABLE, redtext("LGC mode"));
+
+	W_SetCurrentAmmo();
+}
+
+void ToggleX76(void)
+{
+	qbool k_x76 = cvar(X76_VARIABLE) != 0;
+
+	if (!is_rules_change_allowed())
+	{
+		return;
+	}
+
+	if (!k_x76 && (deathmatch != 4))
+	{
+		G_sprint(self, 2, "x76 mode requires dmm4\n");
+
+		return;
+	}
+
+	// Disable incompatible modes
+	if (cvar("k_midair"))
+	{
+		cvar_set("k_midair", "0");
+	}
+
+	if (cvar("k_instagib"))
+	{
+		cvar_set("k_instagib", "0");
+	}
+
+	if (cvar(LGCMODE_VARIABLE))
+	{
+		cvar_set(LGCMODE_VARIABLE, "0");
+	}
+
+	if (cvar(TOT_MODE_VARIABLE))
+	{
+		cvar_set(TOT_MODE_VARIABLE, "0");
+	}
+
+	if (cvar("k_dmm4_gren_mode"))
+	{
+		cvar_set("k_dmm4_gren_mode", "0");
+	}
+
+	if (cvar("k_dmgfrags"))
+	{
+		cvar_set("k_dmgfrags", "0");
+	}
+
+	cvar_set(X76_VARIABLE, k_x76 ? "1" : "0");
+
+	cvar_toggle_msg(self, X76_VARIABLE, redtext("x76 mode"));
 
 	W_SetCurrentAmmo();
 }
@@ -7969,6 +8047,11 @@ void ToggleToT(void)
 	if (cvar("k_instagib"))
 	{
 		cvar_set("k_instagib", "0");
+	}
+
+	if (cvar(X76_VARIABLE))
+	{
+		cvar_set(X76_VARIABLE, "0");
 	}
 
 	cvar_set(TOT_MODE_VARIABLE, k_tot ? "1" : "0");
@@ -9563,6 +9646,39 @@ qbool tot_mode_enabled(void)
 	return cvar(TOT_MODE_VARIABLE) != 0;
 }
 
+qbool x76_enabled(void)
+{
+	return cvar(X76_VARIABLE) != 0;
+}
+
+// x76: every point of damage dealt to an enemy is healed back, up to X76_MAX_HEALTH.
+// dmg_dealt is already capped by the victim's remaining health, so overkill does not heal.
+void x76_vampire(gedict_t *attacker, gedict_t *targ, float dmg_dealt)
+{
+	if (!x76_enabled() || (dmg_dealt <= 0))
+	{
+		return;
+	}
+
+	if ((attacker->ct != ctPlayer) || (targ->ct != ctPlayer) || (attacker == targ)
+			|| ISDEAD(attacker) || TELEDEATH(targ))
+	{
+		return;
+	}
+
+	if (!isFFA() && !isDuel() && SameTeam(attacker, targ))
+	{
+		return;
+	}
+
+	if (attacker->s.v.health >= X76_MAX_HEALTH)
+	{
+		return;
+	}
+
+	attacker->s.v.health = min(X76_MAX_HEALTH, attacker->s.v.health + dmg_dealt);
+}
+
 void ListGameModes(void)
 {
 	const char *known[] =
@@ -9587,6 +9703,7 @@ void ListGameModes(void)
 		"instagib",
 		"berzerk",
 		"lgcmode",
+		"x76",
 		"arena",
 		"carena",
 		"wipeout",

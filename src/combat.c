@@ -986,6 +986,8 @@ void T_Damage(gedict_t *targ, gedict_t *inflictor, gedict_t *attacker, float dam
 	{
 		targ->s.v.health -= take;
 
+		x76_vampire(attacker, targ, dmg_dealt);
+
 //		G_bprint( 2, "%s %f\n", targ->classname, targ->s.v.health );
 
 		if (take)
